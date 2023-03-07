@@ -1,0 +1,58 @@
+Chat GPT Research:
+Prompt: find me a wordpress plugin that allows the following: load in people to take a customizable questionnaire with a csv. send out an invite email to the people loaded in with the  csv to take the questionnaire. allow multiple question types on the questionnaire. allow a web admin to view who has taken the questionnaire and the results. be able to export a csv of the employees answers. be able to store results. 
+
+Response:
+One possible WordPress plugin that fits the requirements you specified is "Quiz and Survey Master - Best Quiz, Exam and Survey Plugin for WordPress". Here's how it fulfills each of your requirements:
+
+1. Load in people to take a customizable questionnaire with a CSV: Quiz and Survey Master allows you to import users from a CSV file and assign them to a quiz/survey.
+
+2. Send out an invite email to the people loaded in with the CSV to take the questionnaire: You can use the plugin's built-in email system to send invitations to the participants with a link to the quiz/survey.
+
+3. Allow multiple question types on the questionnaire: Quiz and Survey Master supports various question types including multiple-choice, true/false, open-ended, and more.
+
+4. Allow a web admin to view who has taken the questionnaire and the results: The plugin provides a detailed report of the quiz/survey responses, including who has taken it and the results.
+
+5. Be able to export a CSV of the employee's answers: Quiz and Survey Master allows you to export the quiz/survey results in CSV format for further analysis.
+
+6. Be able to store results: The plugin stores the quiz/survey results in the WordPress database, allowing you to access them at any time.
+
+7. Overall, Quiz and Survey Master is a powerful and customizable plugin that allows you to create and manage quizzes and surveys on your WordPress site.
+
+
+Quiz and Survey Master: https://quizandsurveymaster.com/
+Pricing: 
+$129 / year (life time - $387)
+ 1 site
+ Reporting and Analysis
+ Export and Import
+ (Mailchimp, convertkit and more)
+ Google Analytics Tracking
+ URL Parameters
+ Landing Page
+
+ $179 / year  (life time - $537)
+  3 sites
+ + Basic Addons
+ Conditional Logic
+ Mailchimp, Mailpoet, Get Response
+ Summary Emails
+ Extra Shortcodes
+ User Dashboard
+ Daily Limit
+ Advanced Leaderboard
+ reCaptcha
+ Simple Popup
+
+ $199 / year  (life time - $597)
+  10 sites
+ Plus Plan Addons
+ Email Marketing Integrations
+ (Mailchimp, convertkit and more)
+ Zapier Integration
+ Advanced Timer
+ Export Results
+ Google Sheet Connector
+ Save and Resume
+ + all 34 addons
+
+
