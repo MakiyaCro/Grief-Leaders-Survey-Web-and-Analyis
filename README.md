@@ -6,8 +6,8 @@ The web plugin will allow the following: <br />
 -the employees wil be allowed to answer the questions only once <br />
 -the admin will be able to sort through employees who have taken the test and determine how many question have been answered <br />
 -can be taken on both mobile and desktop devices <br />
--allow the admin to adjust the questions of the questionair <br />
--contains both a qution section and a word association section <br />
+-allow the admin to adjust the questions of the questionnaire <br />
+-contains both a question section and a word association section <br />
 -be brandable to the client company <br />
 
 The desktop analysis aplication will do the following: <br />
