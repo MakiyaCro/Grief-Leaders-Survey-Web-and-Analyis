@@ -1,0 +1,17 @@
+The file contains a list of features / functionality in list of order
+-create an questionair with 63 questions and 100 word association
+-be able to modify questions and words association EASILY
+-Instructions clearly indicate participants are to SELECT ALL THE WORDS that describe the company’s
+Culture.
+-After both the Cultural Assessment and the Word Association portion is complete the participant
+should see a message indicating the assessment was successfully completed.
+-recive a csv containing employee information
+-create database to hold employee information such as number questions answered and question results
+-send out invites to take the questionair to employee
+-export results through a formatted csv
+-admin can see information on number of questions answered by employees by viewing the database: needs to be viewable upon request
+-each question on the test may only be answered once: upon submission can not be changed
+-if employee disconnects from exam they may resume from where they left off but not change any previous answeres
+-can be taken on mobile or desktop
+-I would like the ability to brand the assessment with the client’s logo when dealing with a company. It
+is important that the survey appears to be coming from 777 Ranch for example and not GriefLeaders.
