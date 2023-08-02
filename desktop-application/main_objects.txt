@@ -1,0 +1,30 @@
+Users
+-Username [Primary]
+-email
+-firstname
+-lastname
+-company
+-location
+-status [Sr.Ldr, EE, Mgr] - "May change depending on comapny" - "Main Priority"
+-department [Exec Team, Operations, Sales, IT, Finance ] - "May change depending on comapny"
+-hipo [yes, no]
+-manager - [linked to combination of first and last name]
+-password - [generated]
+-answers - [question number, response]
+
+Questions
+-Question Number [Primary]
+-Score []
+-Catigories - [SrLdr, LdrSpv, RFP , EPS, CM]
+-Sub Categories - [Teamwork, Development, Compassion, Purpose/Values, Engagement] - "Not Priority"
+
+Total Possible Points: []
+
+Maximum Scores for both main categories and sub categories
+
+
+Total Company Score
+-Category
+-Department - Overall and Category
+
+Show who didnt respond - by department and in total "Participation"
