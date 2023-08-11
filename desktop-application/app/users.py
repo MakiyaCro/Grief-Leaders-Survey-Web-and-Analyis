@@ -19,12 +19,13 @@ class  user:
         self.hipo = hipo
         self.mngr = mngr
         self.pw = pw
-        score = -1
-        answers = []
+        self.score = -1
+        self.answers = []
 
 
 
 userList = []
+departmentList = []
 
 userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
 #print(userImportFile.to_string())
@@ -73,7 +74,7 @@ def fileCheck(userImportFile):
         return-1
 
 
-def initUsers(userList, userImportFile):
+def initUsers(userList, departmentList, userImportFile):
     usrNameList = userImportFile['username'].tolist()
     emailList = userImportFile['email'].tolist()
     fNameList = userImportFile['first_name'].tolist()
@@ -85,6 +86,10 @@ def initUsers(userList, userImportFile):
     hipoList = userImportFile['hipo'].tolist()
     mngrList = userImportFile['manager'].tolist()
     pwList = userImportFile['password'].tolist()
+
+    for dep in list(set(dprtList)):
+        departmentList.append(dep)
+    #print(departmentList)
 
     for i in userImportFile.index:
         userList.append(user(usrNameList[i], emailList[i], fNameList[i], lNameList[i], compList[i], locList[i], sttList[i], dprtList[i], hipoList[i], mngrList[i], pwList[i]))
@@ -102,6 +107,7 @@ def addAns(userList, fName):
         for user in userList:
             if ansUser[i] == user.usrName:
                 #put the corresponding row into user data
+                user.score = 0
                 user.answers = ansFile.loc[i, :].values.flatten().tolist()
                 #remove username
                 user.answers.pop(0)
@@ -117,7 +123,7 @@ if fileCheck(userImportFile) == -1:
     print("Error: Check Errors")
 
 print("Initializing Users")
-initUsers(userList, userImportFile)
+initUsers(userList, departmentList, userImportFile)
 
 print("Adding Answers to Users")
 addAns(userList, "exported_results_1690216079.csv")

@@ -12,6 +12,9 @@ class  question:
         self.qScore = qScore
         self.qCat = qCat
         self.qSubCat = qSubCat
+        self.department = []
+        self.hipoYes = 0
+        self.hipoNo = 0
 
 qList = []
 
