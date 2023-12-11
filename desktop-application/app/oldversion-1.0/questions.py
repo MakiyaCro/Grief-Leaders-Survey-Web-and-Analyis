@@ -12,9 +12,35 @@ class  question:
         self.qScore = qScore
         self.qCat = qCat
         self.qSubCat = qSubCat
+
+        self.department = []
+
+        self.hipoYes = 0
+        self.hipoNo = 0
+        self.hipoRes = 0
+
+        self.tScoreYes = 0
+        self.tScoreNo = 0
+        self.tScoreRes = 0
+        
+        self.hipoweightedScore = 0
+
+
+        self.yes = 0
+        self.no = 0
+        self.res = 0
+        
+        self.weightedScore = 0
+
 qList = []
 
 #open the csv file
+#with open('questionsUTD.csv', newline= '') as csvfile:
+#    qfile = csv.reader(csvfile, delimiter=' ')
+#    for row in qfile:
+#        print(' '.join(row))
+
+
 qfile = pd.read_csv("./desktop-application/app/questionList.csv")
 #print(qfile.to_string())
 

@@ -1,0 +1,101 @@
+word,ident
+Accepting,pos
+Accessible,pos
+Accountable,pos
+Adaptable,pos
+Attentive,pos
+Authentic,pos
+Autocratic,neg
+Autonomous,pos
+Biased,neg
+Boring,neg
+Busy,pos
+Caring,pos
+Casual,pos
+Celebrating,pos
+Challenging,pos
+Collaborative,pos
+Comfortable,pos
+Common Purpose,pos
+Communication,pos
+Compassionate,pos
+Competitive,neg
+Connected,pos
+Curious,pos
+Cut Throat,neg
+Demanding,neg
+Dictatorial,neg
+Discriminatory,neg
+Disengaged,neg
+Diverse,pos
+Empathetic,pos
+Empowerment,pos
+Engaging,pos
+Ethical,pos
+Exciting,pos
+Fair,pos
+Family Oriented,pos
+Fast-paced,pos
+Flexibility,pos
+Freedom,pos
+Friendly,pos
+Fun,pos
+Giving Back,pos
+Greed,neg
+Happy,pos
+Harassment,neg
+Healthy,pos
+High Performance,pos
+Hostile,neg
+Human,pos
+Humility,pos
+Inclusive,pos
+Inconsistent,neg
+Innovation,pos
+Inspiring,pos
+Integrity,pos
+Learning,pos
+Micromanaging,neg
+Motivating,pos
+Negative,neg
+No Values,neg
+Nurturing,pos
+Open,pos
+Opinions Matter,pos
+Outdated,neg
+Overwhelming,neg
+People Focused,pos
+Performance-based,pos
+Places Blame,neg
+Political,neg
+Poor Leadership,neg
+Positive,pos
+Professional,pos
+Progressive,pos
+Proud/Pride,pos
+Punitive,neg
+Purpose-driven,pos
+Relaxed,pos
+Respect,pos
+Results At All Cost,neg
+Results-based,pos
+Rewarding,pos
+Rigid,neg
+Safe,pos
+Siloed,neg
+Stressful,neg
+Supportive,pos
+Team-based,pos
+Toxic,neg
+Transparent,pos
+Trusting,pos
+Unethical,neg
+Unforgiving,neg
+Unproductive,neg
+Unscrupulous,neg
+Unsupportive,neg
+Untrustworthy,neg
+Values-based,pos
+Vulnerability,pos
+Warm,pos
+Welcoming,pos

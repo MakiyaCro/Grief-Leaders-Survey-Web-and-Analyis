@@ -75,6 +75,7 @@ def fileCheck(userImportFile):
         print("Error with frist column: Should be password but is currently " + column_names[10])
         return-1
 
+
 def initUsers(userList, departmentList, userImportFile):
     usrNameList = userImportFile['username'].tolist()
     emailList = userImportFile['email'].tolist()
@@ -94,7 +95,7 @@ def initUsers(userList, departmentList, userImportFile):
 
     for pos in list(set(sttList)):
         positionList.append(pos)
-    #print(positionList)
+    print(positionList)
 
     for i in userImportFile.index:
         userList.append(user(usrNameList[i], emailList[i], fNameList[i], lNameList[i], compList[i], locList[i], sttList[i], dprtList[i], hipoList[i], mngrList[i], pwList[i]))
@@ -128,6 +129,8 @@ def userWords(userList):
             temp = user.answers[63:]
             temp.pop()
             user.words = [s.strip() for s in temp[0].split(',')]
+
+
 
 #Error Checking
 #print("User File Error Checking")
