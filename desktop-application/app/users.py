@@ -23,8 +23,6 @@ class  user:
         self.answers = []
         self.words = []
 
-
-
 userList = []
 departmentList = []
 positionList = []
@@ -130,19 +128,11 @@ def userWords(userList):
             user.words = [s.strip() for s in temp[0].split(',')]
 
 #Error Checking
-#print("User File Error Checking")
 if fileCheck(userImportFile) == -1:
     print("Error: Check Errors")
 
-#print("Initializing Users")
 initUsers(userList, departmentList, userImportFile)
-
-#print("Adding Answers to Users")
 addAns(userList, "exported_results_1690216079.csv")
-
-#print("Adding Words to Users")
 userWords(userList)
 
-#print("User info loaded successfully")
-#for obj in userList:
- #   print(obj.usrName)
+print("User Data Loaded Successfully")

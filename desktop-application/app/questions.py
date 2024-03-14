@@ -51,7 +51,6 @@ def initQuestion(qList, qfile):
 
 
 #Error Checking
-print("Question File Error Checking")
 if fileCheck(qfile) == -1:
     print("Error: Check Errors")
 
@@ -61,4 +60,4 @@ initQuestion(qList, qfile)
 #for obj in qList:
     #print(obj.qNum)
 
-print("Question info loaded successfully")
+print("Question Data Loaded Successfully")

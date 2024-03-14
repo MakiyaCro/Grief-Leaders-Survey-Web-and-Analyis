@@ -37,12 +37,6 @@ class Catscores:
         self.ques = []
         self.pscore = 0
         self.weightedScore = 0
-        
-        self.depweightedScore = 0
-        self.deppScore = 0
-
-        self.posweightedScore = 0
-        self.pospScore = 0
 
         self.tPScore = 0
 
@@ -75,6 +69,7 @@ class question:
         self.qNum = qNum
         self.qScore = qScore
 
+        self.res = 0
         self.yes = 0
         self.no = 0
         self.weighted = 0
@@ -142,6 +137,8 @@ def assignQuestions(categories, questions):
             cat.ques.append(question(t.qNum, t.qScore))
             #cat.posquesList.append(question(t.qNum, t.qScore))
 
+            cat.hipo.ques.append(question(t.qNum, t.qScore))
+
             for dep in cat.departments:
                 dep.ques.append(question(t.qNum, t.qScore))
             
@@ -205,17 +202,30 @@ def parseAnswers(categories, userList, quesList):
             for ques in quesList: #used for referance for the scoring
                 store(categories, ques.qCat, user.dprt, user.stt, user.hipo, ques.qNum, user.answers[ques.qNum - 1])
 
-def generateQuestionWeightedScore(typearr, flag):
-
+def generateQuestionWeightedScore(typearr, tpscore, flag):
+    
     if flag != True:
+        tweight = 0
         for typ in typearr:
+                tweight = 0
                 for ques in typ.ques:
                     ques.res = (ques.yes / (ques.yes + ques.no)) * 100
                     ques.weighted = (ques.yes / (ques.yes + ques.no)) * ques.qScore
+                    tweight += ques.weighted
+
+                typ.weightedScore = tweight
+                typ.pscore = (typ.weightedScore / tpscore) * 100
+
+
+
     else:
+        tweight = 0
         for ques in typearr.ques:
                     ques.res = (ques.yes / (ques.yes + ques.no)) * 100
                     ques.weighted = (ques.yes / (ques.yes + ques.no)) * ques.qScore
+                    tweight += ques.weighted
+
+        return tweight
         
 def generateWeightedScore(categories, tpScore):
     #deptotalweighted = 0
@@ -223,15 +233,16 @@ def generateWeightedScore(categories, tpScore):
 
     for cat in categories:
 
-        generateQuestionWeightedScore(cat.departments, False)
-        generateQuestionWeightedScore(cat.positions, False)
-        generateQuestionWeightedScore(cat.hipo, True)
-        generateQuestionWeightedScore(cat, True)
+        generateQuestionWeightedScore(cat.departments, cat.tPScore, False)
+        generateQuestionWeightedScore(cat.positions, cat.tPScore,False)
 
-        for ques in cat.ques:
-           cat.weightedScore += ques.weighted
+        cat.hipo.weightedScore = generateQuestionWeightedScore(cat.hipo, cat.tPScore,True)
+        cat.hipo.pscore = (cat.hipo.weightedScore / cat.tPScore) * 100
 
+        cat.weightedScore = generateQuestionWeightedScore(cat, cat.tPScore, True)
         cat.pscore = ( cat.weightedScore / cat.tPScore) * 100
+        #for ques in cat.ques:
+        #   cat.weightedScore += ques.weighted
 
         totalweighted += cat.weightedScore
 
@@ -240,14 +251,9 @@ def generateWeightedScore(categories, tpScore):
 #init shells for data
 initCategories(assessment.cat, assessment.departList, assessment.positionList, assessment.categories)
 assignQuestions(assessment.categories, assessment.quesList)
-
 parseAnswers(assessment.categories, assessment.userList, assessment.quesList)
+print("Question Data Loaded Successfully")
 
 assessment.tpScore = determinetotalPossibleScore(assessment.quesList)
 assessment.pScore = generateWeightedScore(assessment.categories, assessment.tpScore)
-#generateAssessmentScore(assessment.categories)
-
-
-
-
-print("complete")
+print("Completed Question Scoring")
