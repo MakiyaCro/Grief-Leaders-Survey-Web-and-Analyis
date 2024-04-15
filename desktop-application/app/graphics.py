@@ -227,9 +227,10 @@ def generateQueGraph(category, typ):
 
     #legend()
     #axis([0, 10, 0, 8])
+    plt.subplots_adjust(bottom=0.2)
     plt.xticks(rotation=30, ha='right')
     #plt.show()
-    plt.savefig("./desktop-application/app/graphics/questiongraphs/" + category.catigory + typ + 'barchart.png')
+    plt.savefig("./desktop-application/app/graphics/questiongraphs/" + category.catigory + typ + 'barchart.png', dpi=200)
     plt.cla()
     plt.close()
 
@@ -249,13 +250,13 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
         for wrd in cls.words:
             tempArr = []
             tempArr.append(wrd.name)
-            tempArr.append("%" + str(int(wrd.percent * 100)))
+            tempArr.append(str(int(wrd.percent * 100)))
             for sec in arr:
                 for cl in sec.clusters:
                     if cl.name == cls.name:
                         for w in cl.words:
                             if w.name == wrd.name:
-                                tempArr.append("%" + str(int(w.percent * 100)))
+                                tempArr.append(str(int(w.percent * 100)))
                                 break
                         break
 
@@ -263,7 +264,7 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
                 if cl.name == cls.name:
                     for w in cl.words:
                         if w.name == wrd.name:
-                            tempArr.append("%" + str(int(w.percent * 100)))
+                            tempArr.append(str(int(w.percent * 100)))
                             break
                     break
 
@@ -437,7 +438,7 @@ def generateWordGraph(arr, companyname, overall, typList, typ):
     #df['positive'] = df['scores' > 0]
 
     #df['values'].plot(kind='barh',color=df.positive.map({True: 'g', False: 'r'}))
-    plt.bar(x_axis, y_axis, width=1, color= c)
+    plt.bar(x_axis, y_axis, width=.75, color= c)
 
     for i in range(len(x_axis)):
         plt.text(i, y_axis[i]//2, int(y_axis[i]), ha = 'center', weight='bold')
@@ -446,9 +447,10 @@ def generateWordGraph(arr, companyname, overall, typList, typ):
     #axis([0, 10, 0, 8])
     plt.xticks(rotation=30, ha='right')
     #plt.show()
+    plt.subplots_adjust(bottom=0.2)
 
     
-    plt.savefig("./desktop-application/app/graphics/wordgraphs/" + typ +  "WordBarchart.png")
+    plt.savefig("./desktop-application/app/graphics/wordgraphs/" + typ +  "WordBarchart.png", dpi = 200)
     plt.cla()
     plt.close()
 
@@ -478,11 +480,11 @@ def tableSyle(df):
     print("Todo")
 
 print("Generating Word Assosiation Graphics")
-#generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
+generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
 generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.userTotal, wordchart, sf)
 print("Word Assosiation Graphics Complete")
 
 print("Generating Question Graphics")
-#generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-#generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
+generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
+generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
 print ("Question Graphics Complete")
