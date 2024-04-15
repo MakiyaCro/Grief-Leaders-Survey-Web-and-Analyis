@@ -336,10 +336,17 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     #seg3 - x1482 y340
     #seg4 - x1482 y740
     #set multiplier to make cirlces bigger x10
+
+
+    #swap to numbers and remove dots
     seg1 = (seg1 / (neg+pos)) * 175
     seg2 = (seg2 / (neg+pos)) * 175
     seg3 = (seg3 / (pos+neg)) * 175
     seg4 = (seg4 / (pos+neg)) * 175
+    #seg1 = 0
+    #seg2 = 0
+    #seg3 = 175
+    #seg4 = 0
     draw.ellipse((607 - seg1, 740 - seg1, 607 + seg1, 740 + seg1), fill="blue")
     draw.ellipse((607 - seg2, 340 - seg2, 607 + seg2, 340 + seg2), fill="blue")
     draw.ellipse((1482 - seg3, 340 - seg3, 1482 + seg3, 340 + seg3), fill="blue")
@@ -458,11 +465,11 @@ def tableSyle(df):
     print("Todo")
 
 print("Generating Word Assosiation Graphics")
-generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
+#generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
 generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.userTotal, wordchart, mf)
 print("Word Assosiation Graphics Complete")
 
 print("Generating Question Graphics")
-generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
+#generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
+#generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
 print ("Question Graphics Complete")
