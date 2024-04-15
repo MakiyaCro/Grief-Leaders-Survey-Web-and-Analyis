@@ -25,6 +25,7 @@ class results:
 dial = Image.open("./desktop-application/app/graphics/dial.png")
 #mf = ImageFont.truetype("./desktop-application/app/graphics/Nasa21-l23X.ttf", 100)
 mf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 100)
+sf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 50)
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
 companyname = "Ranch"
@@ -339,18 +340,28 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
 
 
     #swap to numbers and remove dots
-    seg1 = (seg1 / (neg+pos)) * 175
-    seg2 = (seg2 / (neg+pos)) * 175
-    seg3 = (seg3 / (pos+neg)) * 175
-    seg4 = (seg4 / (pos+neg)) * 175
+    seg1p = str(int((seg1 / (neg+pos))*100)) + "%"
+    seg2p = str(int((seg2 / (neg+pos))*100)) + "%"
+    seg3p = str(int((seg3 / (pos+neg))*100)) + "%"
+    seg4p = str(int((seg4 / (pos+neg))*100)) + "%"
     #seg1 = 0
     #seg2 = 0
     #seg3 = 175
     #seg4 = 0
-    draw.ellipse((607 - seg1, 740 - seg1, 607 + seg1, 740 + seg1), fill="blue")
-    draw.ellipse((607 - seg2, 340 - seg2, 607 + seg2, 340 + seg2), fill="blue")
-    draw.ellipse((1482 - seg3, 340 - seg3, 1482 + seg3, 340 + seg3), fill="blue")
-    draw.ellipse((1482 - seg4, 740 - seg4, 1482 + seg4, 740 + seg4), fill="blue")
+    draw.text((200,650), "Words Selected: " + str(seg1), "black", font=fnt)
+    draw.text((200,250), "Words Selected: " + str(seg2), "white", font=fnt)
+    draw.text((1100,250), "Words Selected: " + str(seg3), "white", font=fnt)
+    draw.text((1100,650), "Words Selected: " + str(seg4), "white", font=fnt)
+
+    draw.text((200,750), "Percentage of Total: " + seg1p, "black", font=fnt)
+    draw.text((200,350), "Percentage of Total: " + seg2p, "white", font=fnt)
+    draw.text((1100,350), "Percentage of Total: " + seg3p, "white", font=fnt)
+    draw.text((1100,750), "Percentage of Total: " + seg4p, "white", font=fnt)
+
+    #draw.ellipse((607 - seg1, 740 - seg1, 607 + seg1, 740 + seg1), fill="blue")
+    #draw.ellipse((607 - seg2, 340 - seg2, 607 + seg2, 340 + seg2), fill="blue")
+    #draw.ellipse((1482 - seg3, 340 - seg3, 1482 + seg3, 340 + seg3), fill="blue")
+    #draw.ellipse((1482 - seg4, 740 - seg4, 1482 + seg4, 740 + seg4), fill="blue")
     #draw.ellipse((1482 - 175, 740 - 175, 1482 + 175, 740 + 175), fill="blue")
 
     #add text to top of chart
@@ -358,7 +369,9 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     w = 1080
 
     ptext = name + " Word Association Summary"
-    draw.text((w, 70), ptext, (0,0,0), font=fnt, anchor="mm")
+    subtext = "n=" + str(tUser) + " participants"
+    draw.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
+    draw.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
 
     #newchart.show()
     newchart.save("./desktop-application/app/graphics/wordchart/" + name + "WordChart" + ".png", "PNG")
@@ -466,7 +479,7 @@ def tableSyle(df):
 
 print("Generating Word Assosiation Graphics")
 #generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.userTotal, wordchart, mf)
+generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.userTotal, wordchart, sf)
 print("Word Assosiation Graphics Complete")
 
 print("Generating Question Graphics")
