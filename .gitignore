@@ -127,16 +127,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-.png
-
-desktop-application/app/graphics/wordchart/EEWordChart.png
-desktop-application/app/graphics/wordchart/Exec TeamWordChart.png
-desktop-application/app/graphics/wordchart/FinanceWordChart.png
-desktop-application/app/graphics/wordchart/ITWordChart.png
-desktop-application/app/graphics/wordchart/MgrWordChart.png
-desktop-application/app/graphics/wordchart/OperationsWordChart.png
-desktop-application/app/graphics/wordchart/OverallWordChart.png
-desktop-application/app/graphics/wordchart/SalesWordChart.png
-desktop-application/app/graphics/wordchart/Sr. LdrWordChart.png
-desktop-application/app/graphics/wordgraphs/DepartmentWordBarchart.png
-desktop-application/app/graphics/wordgraphs/PositionWordBarchart.png
+*.png
