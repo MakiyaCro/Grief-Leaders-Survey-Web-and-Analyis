@@ -1,12 +1,43 @@
 from pptx import Presentation
+import os
+from os import listdir
 
-prs = Presentation()
-title_slide_layout = prs.slide_layouts[0]
-slide = prs.slides.add_slide(title_slide_layout)
-title = slide.shapes.title
-subtitle = slide.placeholders[1]
 
-title.text = "Hello, World!"
-subtitle.text = "python-pptx was here!"
+imgpath = "./desktop-application/app/graphics/"
+fldrList = ['clustertables', 'dials', 'questiongraphs', 'wordchart', 'wordgraphs', 'tables']
+typList = ['overall', 'department', 'position']
+prs = Presentation("./desktop-application/app/powerpoint/baseLayout.pptx")
 
-prs.save("./desktop-application/app/powerpoint/test.pptx")
+#for slide in prs.slides:
+    #print(slide.slide_id)
+
+print("temp")
+
+class presentation:
+    def __init__(self, title, date):
+        self.title = title
+        self.date = date
+
+class p_slide:
+    def __init__(self, title):
+        self.title = title
+
+class image:
+    def __init__(self, typ, category):
+        self.type = typ
+        self.category = category
+
+
+def addImages(imgpath, fldrList):
+    for fldr in fldrList:
+        arr = []
+        for images in os.listdir(imgpath+fldr+'/'):
+            if images.endswith(".png"):
+                arr.append(images)
+
+
+        print("temp")
+
+
+
+addImages(imgpath, fldrList)

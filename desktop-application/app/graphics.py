@@ -56,7 +56,7 @@ def generateDial(dial, pointer, fnt, label, percent):
 
     pointerrotate = pointer.rotate(rval)
     intermediate = Image.alpha_composite(dial, pointerrotate)
-    intermediate.save("./desktop-application/app/graphics/dials/" + str(label) + ".png", "PNG")
+    intermediate.save("./desktop-application/app/graphics/dials/" + "OVERALL_" + str(label) + ".png", "PNG")
 
     #save the image
 
@@ -114,6 +114,7 @@ def tableConcat(df):
     return temp
 
 def generateQuestionTable(catigory, arr, companyname, typList, typ):
+    end = typ
     df = generateDataframe("QN", typList, companyname)
     df.name = typ + catigory.catigory
 
@@ -145,8 +146,8 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
     blankIndex = ['']*len(df)
     df.index=blankIndex
     #print(df)
-    dfi.export(df, "./desktop-application/app/graphics/questiontables/full/" + df.name + "tablefull.png")
-    dfi.export(newdf, "./desktop-application/app/graphics/questiontables/concat/" + df.name + "tableconcat.png")
+    dfi.export(df, "./desktop-application/app/graphics/questiontables/" + end + "_" + catigory.catigory + "_full.png")
+    dfi.export(newdf, "./desktop-application/app/graphics/questiontables/" + end + "_" + catigory.catigory + "_concat.png")
     del df
     del newdf
 
@@ -158,7 +159,7 @@ def generateQueGraph(category, typ):
     cline = int(category.pscore)
 
 
-    if typ == "dep":
+    if typ == "DEP":
 
 
         plt.title(category.catigory + " Department Analysis")
@@ -168,7 +169,7 @@ def generateQueGraph(category, typ):
             names.append(dep.name)
             vals.append(int(dep.pscore))
 
-    elif typ == "pos":
+    elif typ == "POS":
 
 
         plt.title(category.catigory + " Position Analysis")
@@ -230,7 +231,7 @@ def generateQueGraph(category, typ):
     plt.subplots_adjust(bottom=0.2)
     plt.xticks(rotation=30, ha='right')
     #plt.show()
-    plt.savefig("./desktop-application/app/graphics/questiongraphs/" + category.catigory + typ + 'barchart.png', dpi=200)
+    plt.savefig("./desktop-application/app/graphics/questiongraphs/" + typ + "_" + category.catigory + 'barchart.png', dpi=200)
     plt.cla()
     plt.close()
 
@@ -238,8 +239,8 @@ def generateQuestionDataHub(categories, companyname, departList, positionList):
     for cat in categories:
         generateQuestionTable(cat, cat.departments, companyname, departList, "DEP")
         generateQuestionTable(cat, cat.positions, companyname, positionList, "POS")
-        generateQueGraph(cat, "dep")
-        generateQueGraph(cat, "pos")
+        generateQueGraph(cat, "DEP")
+        generateQueGraph(cat, "POS")
 
 def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
     
@@ -272,7 +273,7 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
         
         blankIndex = ['']*len(df)
         df.index=blankIndex
-        dfi.export(df, "./desktop-application/app/graphics/clustertables/" + typ + df.name + "clustertable.png")
+        dfi.export(df, "./desktop-application/app/graphics/clustertables/" + typ + "_" + df.name + "clustertable.png")
         del df
     
 def generateWordTable(arr, hipo, companyname, overall, typList, typ):
@@ -300,8 +301,14 @@ def generateWordTable(arr, hipo, companyname, overall, typList, typ):
 
     blankIndex = ['']*len(df)
     df.index=blankIndex
+
+    end = ""
+    if typ == "Department":
+        end = "DEP"
+    elif typ == "Position":
+        end = "POS" 
     #print(df)
-    dfi.export(df, "./desktop-application/app/graphics/wordtables/" + typ + "wrdasses" + "tablefull.png")
+    dfi.export(df, "./desktop-application/app/graphics/wordtables/" + end + "_wrdasses" + "tablefull.png")
     del df
 
 def generateWordGraphic(arr, name, tUser, chart, fnt):
@@ -375,7 +382,7 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     draw.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
 
     #newchart.show()
-    newchart.save("./desktop-application/app/graphics/wordchart/" + name + "WordChart" + ".png", "PNG")
+    newchart.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart" + ".png", "PNG")
 
 def generateWordGraph(arr, companyname, overall, typList, typ):
     #determine the centerline
@@ -449,8 +456,13 @@ def generateWordGraph(arr, companyname, overall, typList, typ):
     #plt.show()
     plt.subplots_adjust(bottom=0.2)
 
-    
-    plt.savefig("./desktop-application/app/graphics/wordgraphs/" + typ +  "WordBarchart.png", dpi = 200)
+    end = ""
+    if typ == "Department":
+        end = "DEP"
+    elif typ == "Position":
+        end = "POS"
+
+    plt.savefig("./desktop-application/app/graphics/wordgraphs/" + end + "_" + "WordBarchart.png", dpi = 200)
     plt.cla()
     plt.close()
 
