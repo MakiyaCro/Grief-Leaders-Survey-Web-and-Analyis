@@ -466,10 +466,13 @@ def generateWordGraph(arr, companyname, overall, typList, typ):
     plt.cla()
     plt.close()
 
-def generateWordGraphicHub(overall, departments, positions, departList, positionList, tUsers, chart, fnt):
+def generateWordGraphicHub(overall, departments, positions, departList, positionList, hipo, tUsers, chart, fnt):
     #use bubbles in each quadrent possibly percentage in each bubble, tyarget is max size pos in upper left
     #overall
     generateWordGraphic(overall, "Overall", tUsers, chart, fnt)
+
+    #high potential
+    generateWordGraphic(hipo.words, "High-Potential", hipo.userTotal, chart, fnt)
 
     for dep in departments:
         generateWordGraphic(dep.words, dep.name, dep.userTotal, chart, fnt)
@@ -493,7 +496,7 @@ def tableSyle(df):
 
 print("Generating Word Assosiation Graphics")
 generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.userTotal, wordchart, sf)
+generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
 print("Word Assosiation Graphics Complete")
 
 print("Generating Question Graphics")
