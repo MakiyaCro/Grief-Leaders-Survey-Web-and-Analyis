@@ -466,6 +466,105 @@ def generateWordGraph(arr, companyname, overall, typList, typ):
     plt.cla()
     plt.close()
 
+    #add words to graphic
+
+def addWordstoWordGraph(graph, data, overall, totalP):
+    class tempcats:
+        def __init__(self, name, avg, pwords, nwords):
+            self.name = name 
+            self.avg = avg
+            self.pwords = pwords
+            self.nwords = nwords
+
+    graphList = []
+    totalCat = len(data) 
+    #need to load the data
+    #determine if it is positive or negative compared to average
+    #if positive grab the top words 
+
+    #determine the centerline
+    neg = 0
+    pos = 0
+    for wrd in overall:
+        if wrd.ident == "neg":
+            neg+=wrd.total
+        elif wrd.ident == "pos":
+            pos+=wrd.total
+    
+    cline = int(pos / (pos + neg) * 100)
+
+    #step into the catigoie (departments or positions)
+    for cat in data:
+        compareval = int(cat.pos / (cat.pos + cat.neg) * 100)
+        #grabb all the word with a non zero value
+        
+        pwrd = []
+        nwrd = []
+        for w in cat.words:
+            if w.ident == 'pos' and w.total > 0:
+                pwrd.append(w)
+            elif w.ident == 'neg' and w.total > 0:
+                nwrd.append(w)
+
+        pwrd.sort(key=lambda x: x.total, reverse=True)
+        nwrd.sort(key=lambda x: x.total, reverse=False)
+        if compareval >= cline:
+            while len(pwrd) > 5:
+                pwrd.pop()
+            while len(nwrd) > 5:
+                nwrd.pop()
+        
+        elif compareval < cline:
+            while len(pwrd) > 3:
+                pwrd.pop()
+            while len(nwrd) > 8:
+                nwrd.pop(0)
+            #grap top five pos words and top five neg words
+        
+
+        #need to compare these to overall list
+        c = ''
+        temp = []
+        temn = []
+        for w in overall:
+            for cw in pwrd:
+                if cw.name == w.name:
+                    #total word / cat users = percent compared to overall total  / total users = percent
+                    tp = cw.total / cat.userTotal
+                    op = w.total / totalP
+
+                    if tp > op: #greater
+                        c = '<'
+                    elif tp < op: #less
+                        c = '>'
+
+                    temp.append(c+cw.name)
+
+            for cw in nwrd:
+                if cw.name == w.name:
+                    #total word / cat users = percent compared to overall total  / total users = percent
+                    tp = cw.total / cat.userTotal
+                    op = w.total / totalP
+
+                    if tp > op: #greater
+                        c = '<'
+                    elif tp < op: #less
+                        c = '>'
+
+                    temn.append(c+cw.name)
+
+        graphList.append(tempcats(cat.name, compareval, temp, temn))
+        print()
+
+
+    #open the image with pillow
+    #font will have to scale with number of categories in the graph
+    sf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 50)
+    wordtext = ImageDraw.Draw(graph)
+    #wordtext.text((width/ 2,630), label, (211,211,211), font=fnt, anchor="mm")
+    #wordtext.text((400,690), ptext, (0,0,0), font=fnt)
+    print("temp")
+
 def generateWordGraphicHub(overall, departments, positions, departList, positionList, hipo, tUsers, chart, fnt):
     #use bubbles in each quadrent possibly percentage in each bubble, tyarget is max size pos in upper left
     #overall
@@ -494,12 +593,14 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
 def tableSyle(df):
     print("Todo")
 
-print("Generating Word Assosiation Graphics")
-generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
-print("Word Assosiation Graphics Complete")
+#print("Generating Word Assosiation Graphics")
+#generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
+#generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
+#print("Word Assosiation Graphics Complete")
 
-print("Generating Question Graphics")
-generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
-print ("Question Graphics Complete")
+#print("Generating Question Graphics")
+#generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
+#generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
+#print ("Question Graphics Complete")
+
+addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarChat.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)

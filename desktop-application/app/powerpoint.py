@@ -1,13 +1,19 @@
 from pptx import Presentation
+from pptx.util import Inches 
+
+from PIL import Image
+
 import os
 from os import listdir
 
 
 imgpath = "./desktop-application/app/graphics/"
-fldrList = ['clustertables', 'dials', 'questiongraphs', 'wordchart', 'wordgraphs', 'wordtables']
+fldrList = ['clustertables', 'dials', 'questiongraphs', 'questiontables', 'wordchart', 'wordgraphs', 'wordtables']
 typList = ['overall', 'department', 'position']
-prs = Presentation("./desktop-application/app/powerpoint/baseLayout.pptx")
+prs = Presentation("./desktop-application/app/powerpoint/empty.pptx")
 pictures = []
+
+
 
 
 class presentation:
@@ -55,9 +61,20 @@ def initPresImages(imgpath, fldrList, pictures):
         pictures.append(lst)
 
 
-def initPresSlides(prs):
-    for slide in prs.slides:
-        print(slide.slide_id)
+def initPresSlides(prs, pictures):
+    #for slide in prs.slides:
+        #print(slide.slide_id)
+    """ Ref for slide types:  
+    0 ->  title and subtitle 
+    1 ->  title and content 
+    2 ->  section header 
+    3 ->  two content 
+    4 ->  Comparison 
+    5 ->  Title only  
+    6 ->  Blank 
+    7 ->  Content with caption 
+    8 ->  Pic with caption 
+    """
 
     """slide 256 Title Slide (Company Image) Date
     #slide 257 (No Work)
@@ -154,9 +171,146 @@ def initPresSlides(prs):
     #The Restr Are Notes and Next Step From Anth : (No Work)
     """
     
+    powerpoint = prs
+    #title
+    slide_layout = powerpoint.slide_layouts[0]
+    slide = powerpoint.slides.add_slide(slide_layout)
+    slide.shapes.title.text = "Title Place Holder"
+    slide.placeholders[1].text = "Cultural Assessment Leadership Team Review"
+
+    print("temp")
+
+
+    # For margins 
+     
+    
+
+    #dial layout
+    for folder in pictures:
+        #print(folders.fldr)
+
+        if folder.fldr == 'dials':
+
+            slide_layout= powerpoint.slide_layouts[1]
+            slide = powerpoint.slides.add_slide(slide_layout)
+            slide.shapes.title.text = "Executive Summary"
+
+            for pic in folder.pics:
+                if pic.name == "OVERALL_RFP.png":
+                    pic = slide.shapes.add_picture(pic.path ,Inches(2.9), Inches(2), Inches(2.25))
+                if pic.name == "OVERALL_Ranch.png":
+                    pic = slide.shapes.add_picture(pic.path ,Inches(5.25), Inches(1.6), Inches(3))
+                if pic.name == "OVERALL_EPS.png":
+                    pic = slide.shapes.add_picture(pic.path ,Inches(8.35), Inches(2), Inches(2.25))
+                if pic.name == "OVERALL_CM.png":
+                    pic = slide.shapes.add_picture(pic.path ,Inches(3.25), Inches(4.35), Inches(2.25))
+                if pic.name == "OVERALL_SrLdr.png":
+                    pic = slide.shapes.add_picture(pic.path ,Inches(5.62), Inches(4.65), Inches(2.25))
+                if pic.name == "OVERALL_LdrSpv.png":
+                    pic = slide.shapes.add_picture(pic.path ,Inches(8), Inches(4.35), Inches(2.25))
+                    
+                
+
+    '''# adds just graph to slides
+    for folder in pictures:
+        if folder.fldr == 'questiongraphs':
+            for pic in folder.pics:
+
+                slide_layout = powerpoint.slide_layouts[3]
+                slide = powerpoint.slides.add_slide(slide_layout)
+                
+                tempname = pic.name.replace('.png', '')
+                typ, name = tempname.split('_')[0], tempname.split('_')[1]
+                name = name.replace('barchart', '')
+
+                #print(typ, name)
+                if typ == 'DEP':
+                    slide.shapes.title.text = name + " Departimental Analysis"
+                elif typ == 'POS':
+                    slide.shapes.title.text = name + " Position Analysis"
+
+                pic = slide.shapes.add_picture(pic.path ,Inches(3.25), Inches(1.5), Inches(7) )'''
+
+
+    #dials graph and table all on one
+    for folder in pictures:
+        if folder.fldr == 'questiongraphs':
+            for pic in folder.pics:
+
+                slide_layout = powerpoint.slide_layouts[3]
+                slide = powerpoint.slides.add_slide(slide_layout)
+                
+                tempname = pic.name.replace('.png', '')
+                typ, name = tempname.split('_')[0], tempname.split('_')[1]
+                name = name.replace('barchart', '')
+
+                #print(typ, name)
+                if typ == 'DEP':
+                    slide.shapes.title.text = name + " Departimental Analysis"
+                elif typ == 'POS':
+                    slide.shapes.title.text = name + " Position Analysis"
+
+                slidepic = slide.shapes.add_picture(pic.path ,Inches(1), Inches(2), Inches(5.5) )
+
+                for dfolder in pictures:
+                    if dfolder.fldr == "dials":
+                        for dialpic in dfolder.pics:
+                            if name in dialpic.name:
+                                dial = slide.shapes.add_picture(dialpic.path, Inches(11.5), Inches(0.025), Inches(1.5))
+                                
+                        
+                        
+
+                
+                for tfolder in pictures:
+                    if tfolder.fldr == "questiontables":
+                        for tpic in tfolder.pics:
+                            if (name in tpic.name) and (typ in tpic.name) and ('concat' in tpic.name):
+                                tbl = slide.shapes.add_picture(tpic.path, Inches(6.75), Inches(1.6), Inches(5.5))
+
+                
+    for folder in pictures:
+        if folder.fldr == 'wordchart':
+            for pic in folder.pics:
+                slide_layout = powerpoint.slide_layouts[3]
+                slide = powerpoint.slides.add_slide(slide_layout)
+
+                tempname = pic.name.replace('.png', '')
+                name = tempname.split('_')[1]
+                name = name.replace('WordChart', '')
+
+                slide.shapes.title.text = name + " Word Association"
+
+                slidepic = slide.shapes.add_picture(pic.path ,Inches(1), Inches(2), Inches(5.5) )
+
+    for folder in pictures:
+        if folder.fldr == 'clustertables':
+            for pic in folder.pics:
+                slide_layout = powerpoint.slide_layouts[1]
+                slide = powerpoint.slides.add_slide(slide_layout)
+
+                tempname = pic.name.replace('.png', '')
+                typ, name = tempname.split('_')[0], tempname.split('_')[1]
+                name = name.replace('clustertable', '')
+
+                if typ == 'DEP':
+                    slide.shapes.title.text = name + " Department Word Analysis"
+                elif typ == 'POS':
+                    slide.shapes.title.text = name + " Position Word Analysis"
+
+                slidepic = slide.shapes.add_picture(pic.path ,Inches(3.25), Inches(1.5), Inches(5) )
+    
+        
+            
+
+
+
+
+
+    powerpoint.save("./desktop-application/app/powerpoint/test.pptx")
     print("temp")
 
 #once this runs all the image paths are chached 
 initPresImages(imgpath, fldrList, pictures)
 
-initPresSlides(prs)
+initPresSlides(prs, pictures)
