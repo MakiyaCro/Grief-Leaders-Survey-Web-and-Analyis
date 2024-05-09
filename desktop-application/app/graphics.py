@@ -470,11 +470,11 @@ def generateWordGraph(arr, companyname, overall, typList, typ):
 
 def addWordstoWordGraph(graph, data, overall, totalP):
     class tempcats:
-        def __init__(self, name, avg, pwords, nwords):
+        def __init__(self, name, avg, top, bottom):
             self.name = name 
             self.avg = avg
-            self.pwords = pwords
-            self.nwords = nwords
+            self.top = top
+            self.bottom = bottom
 
     graphList = []
     totalCat = len(data) 
@@ -508,24 +508,17 @@ def addWordstoWordGraph(graph, data, overall, totalP):
 
         pwrd.sort(key=lambda x: x.total, reverse=True)
         nwrd.sort(key=lambda x: x.total, reverse=False)
-        if compareval >= cline:
-            while len(pwrd) > 5:
+        while len(pwrd) > 8:
                 pwrd.pop()
-            while len(nwrd) > 5:
+        while len(nwrd) > 8:
                 nwrd.pop()
-        
-        elif compareval < cline:
-            while len(pwrd) > 3:
-                pwrd.pop()
-            while len(nwrd) > 8:
-                nwrd.pop(0)
             #grap top five pos words and top five neg words
         
 
         #need to compare these to overall list
         c = ''
-        temp = []
-        temn = []
+        top = []
+        bottom = []
         for w in overall:
             for cw in pwrd:
                 if cw.name == w.name:
@@ -535,10 +528,12 @@ def addWordstoWordGraph(graph, data, overall, totalP):
 
                     if tp > op: #greater
                         c = '<'
+                        top.append(c+cw.name)
                     elif tp < op: #less
                         c = '>'
+                        bottom.append(c+cw.name)
 
-                    temp.append(c+cw.name)
+                    
 
             for cw in nwrd:
                 if cw.name == w.name:
@@ -547,13 +542,13 @@ def addWordstoWordGraph(graph, data, overall, totalP):
                     op = w.total / totalP
 
                     if tp > op: #greater
-                        c = '<'
-                    elif tp < op: #less
                         c = '>'
+                        bottom.append(c+cw.name)
+                    elif tp < op: #less
+                        c = '<'
+                        top.append(c+cw.name)
 
-                    temn.append(c+cw.name)
-
-        graphList.append(tempcats(cat.name, compareval, temp, temn))
+        graphList.append(tempcats(cat.name, compareval, top, bottom))
         print()
 
 
