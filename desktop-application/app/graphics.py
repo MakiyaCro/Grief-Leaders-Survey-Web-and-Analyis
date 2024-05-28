@@ -242,6 +242,13 @@ def generateQuestionDataHub(categories, companyname, departList, positionList):
         generateQueGraph(cat, "DEP")
         generateQueGraph(cat, "POS")
 
+
+def highlightred():
+    print()
+
+
+
+
 def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
     
     for cls in overall:
@@ -251,13 +258,13 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
         for wrd in cls.words:
             tempArr = []
             tempArr.append(wrd.name)
-            tempArr.append(str(int(wrd.percent * 100)))
+            tempArr.append((int(wrd.percent * 100)))
             for sec in arr:
                 for cl in sec.clusters:
                     if cl.name == cls.name:
                         for w in cl.words:
                             if w.name == wrd.name:
-                                tempArr.append(str(int(w.percent * 100)))
+                                tempArr.append((int(w.percent * 100)))
                                 break
                         break
 
@@ -265,15 +272,51 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
                 if cl.name == cls.name:
                     for w in cl.words:
                         if w.name == wrd.name:
-                            tempArr.append(str(int(w.percent * 100)))
+                            tempArr.append((int(w.percent * 100)))
                             break
                     break
 
             df.loc[len(df)] = tempArr
         
-        blankIndex = ['']*len(df)
-        df.index=blankIndex
-        dfi.export(df, "./desktop-application/app/graphics/clustertables/" + typ + "_" + df.name + "clustertable.png")
+        #blankIndex = ['']*len(df)
+        #df.index=blankIndex
+
+        #styleize
+
+        index_names = {
+            "selector": ".index_name",
+            "props": "font-style: italic; color: darkgrey; font-weight:normal;"
+            }
+        
+        headers = {
+            "selector": "th:not(.index_name)",
+            "props": "background-color: #800000; color: white; text-align: center",
+            
+            }
+        
+        properties = {"border": "1px solid black", "width": "65px", "text-align": "center"}
+
+        # Function to apply styling based on 25% of the standard deviation
+        def highlight_outliers(val, mean, std_dev):
+            threshold = (0.25 * std_dev) + std_dev
+            #if val == 0:
+                #return ''  # Ignore zero values
+            if val < mean - threshold or val > mean + threshold:
+                return 'background-color: yellow'
+            return ''
+        
+        def style_outliers(row):
+            numeric_data = row[2:]  # Ignore the first two columns
+            mean = numeric_data[numeric_data != 0].mean()  # Calculate mean excluding zeros
+            std_dev = numeric_data[numeric_data != 0].std()  # Calculate std_dev excluding zeros
+            styles = ['', '']  # No style for the first two columns
+            styles += [highlight_outliers(val, mean, std_dev) for val in numeric_data]
+            return styles
+
+        style = df.style.hide(axis="index").set_properties(**properties).set_table_styles([index_names, headers]).apply(style_outliers, axis=1)
+
+
+        dfi.export(style, "./desktop-application/app/graphics/clustertables/" + typ + "_" + df.name + "clustertable.png")
         del df
     
 def generateWordTable(arr, hipo, companyname, overall, typList, typ):
@@ -301,6 +344,9 @@ def generateWordTable(arr, hipo, companyname, overall, typList, typ):
 
     blankIndex = ['']*len(df)
     df.index=blankIndex
+
+
+
 
     end = ""
     if typ == "Department":
@@ -588,14 +634,14 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
 def tableSyle(df):
     print("Todo")
 
-#print("Generating Word Assosiation Graphics")
-#generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-#generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
-#print("Word Assosiation Graphics Complete")
+print("Generating Word Assosiation Graphics")
+generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
+generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
+print("Word Assosiation Graphics Complete")
 
-#print("Generating Question Graphics")
-#generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-#generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
-#print ("Question Graphics Complete")
+print("Generating Question Graphics")
+generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
+generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
+print ("Question Graphics Complete")
 
-addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarChat.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)
+#addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarChat.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)
