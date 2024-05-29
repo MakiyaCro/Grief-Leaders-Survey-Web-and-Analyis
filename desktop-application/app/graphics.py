@@ -629,16 +629,47 @@ def addWordstoWordGraph(graph, data, overall, totalP):
                         top.append(c+cw.name)
 
         graphList.append(tempcats(cat.name, compareval, top, bottom))
-        print()
 
 
-    #open the image with pillow
-    #font will have to scale with number of categories in the graph
-    sf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 50)
-    wordtext = ImageDraw.Draw(graph)
-    #wordtext.text((width/ 2,630), label, (211,211,211), font=fnt, anchor="mm")
-    #wordtext.text((400,690), ptext, (0,0,0), font=fnt)
-    print("temp")
+
+
+    graph_image = Image.open(graph)
+    draw = ImageDraw.Draw(graph_image)
+    font_path = "./desktop-application/app/graphics/impact.ttf"
+    image_path = "./desktop-application/app/graphics/wordgraphs/test.png"
+
+    try:
+        font = ImageFont.truetype(font_path, 20)
+    except IOError:
+        font = ImageFont.load_default()
+    
+    # Dynamically place words on the image
+    bar_width = graph_image.width / len(data)
+    centerline_y = graph_image.height / 2  # Assuming the centerline is at the vertical center of the image
+    
+    for cat in graphList:
+        try:
+            idx = [d.name for d in data].index(cat.name)
+        except ValueError:
+            continue
+
+        bar_x = idx * bar_width + (bar_width / 2)
+        bar_y = int((cat.avg / 100) * graph_image.height / 2 + graph_image.height / 2)
+
+        top_words = "\n".join(cat.top)
+        bottom_words = "\n".join(cat.bottom)
+
+        print(f"Placing top words at ({bar_x}, {centerline_y - 100})")
+        print(f"Placing bottom words at ({bar_x}, {centerline_y + 20})")
+
+        # Place top words above the centerline
+        draw.text((bar_x, centerline_y - 100), top_words, fill="black", font=font, anchor="ms")
+        # Place bottom words below the centerline
+        draw.text((bar_x, centerline_y + 20), bottom_words, fill="black", font=font, anchor="ms")
+
+    graph_image.save(image_path)
+    graph_image.show()
+        
 
 def generateWordGraphicHub(overall, departments, positions, departList, positionList, hipo, tUsers, chart, fnt):
     #use bubbles in each quadrent possibly percentage in each bubble, tyarget is max size pos in upper left
@@ -665,14 +696,14 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
     generateClusterTable(deparments, hipo, companyname, clusters, departList, "DEP")
     generateClusterTable(positions, hipo, companyname, clusters, posList, "POS")
 
-print("Generating Word Assosiation Graphics")
-generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
-print("Word Assosiation Graphics Complete")
+#print("Generating Word Assosiation Graphics")
+#generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
+#generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
+#print("Word Assosiation Graphics Complete")
 
-print("Generating Question Graphics")
-generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
-print ("Question Graphics Complete")
+#print("Generating Question Graphics")
+#generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
+#generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
+#print ("Question Graphics Complete")
 
-#addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarChat.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)
+addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)
