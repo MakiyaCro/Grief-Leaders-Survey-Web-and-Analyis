@@ -114,7 +114,7 @@ def tableConcat(df):
     return temp
 
 def generateQuestionTable(catigory, arr, companyname, typList, typ):
-    end = typ
+    endding = typ
     df = generateDataframe("QN", typList, companyname)
     df.name = typ + catigory.catigory
 
@@ -140,16 +140,60 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
     #print(newdf)
     #print(df)
 
-    blankIndex = ['']*len(newdf)
-    newdf.index=blankIndex
+    #blankIndex = ['']*len(newdf)
+    #newdf.index=blankIndex
 
-    blankIndex = ['']*len(df)
-    df.index=blankIndex
+    #blankIndex = ['']*len(df)
+    #df.index=blankIndex
     #print(df)
-    dfi.export(df, "./desktop-application/app/graphics/questiontables/" + end + "_" + catigory.catigory + "_full.png")
-    dfi.export(newdf, "./desktop-application/app/graphics/questiontables/" + end + "_" + catigory.catigory + "_concat.png")
+
+    #styleize
+
+    index_names = {
+        "selector": ".index_name",
+        "props": "font-style: italic; color: darkgrey; font-weight:normal;"
+        }
+        
+    headers = {
+        "selector": "th:not(.index_name)",
+        "props": "background-color: #5b9bd5; color: white; text-align: center",
+            
+        }
+        
+    properties = {"border": "1px solid black", "width": "65px", "text-align": "center", "padding" : "2px 5px"}
+
+        # Function to apply styling based on 25% of the standard deviation
+    def highlight_outliers(val, mean, std_dev):
+        threshold = (0.25 * std_dev) + std_dev
+        #if val == 0:
+        #return ''  # Ignore zero values
+        if val < mean - threshold or val > mean + threshold:
+            return 'background-color: yellow'
+        return ''
+        
+    def style_outliers(row, exclude_last_column=False):
+        numeric_data = row[2:-1] if exclude_last_column else row[2:]  # Ignore the first two columns and optionally the last column
+        mean = numeric_data.mean()  # Calculate mean 
+        std_dev = numeric_data.std()  # Calculate std_dev 
+        styles = ['', '']  # No style for the first two columns
+        styles += [highlight_outliers(val, mean, std_dev) for val in numeric_data]
+        if exclude_last_column:
+            styles.append('')  # No style for the last column
+        return styles
+
+    # Apply the styling function to the DataFrame without excluding the last column
+    style = df.style.hide(axis="index").set_properties(**properties).set_table_styles([index_names, headers]).apply(style_outliers, axis=1)
+
+    # Apply the styling function to the new DataFrame and exclude the last column
+    style2 = newdf.style.hide(axis="index").set_properties(**properties).set_table_styles([index_names, headers]).apply(style_outliers, axis=1, exclude_last_column=True)
+
+
+    dfi.export(style, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_full.png")
+    dfi.export(style2, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_concat.png")
     del df
     del newdf
+    del style
+    del style2
 
 #might only need it for position analysis
 def generateQueGraph(category, typ):
@@ -242,13 +286,6 @@ def generateQuestionDataHub(categories, companyname, departList, positionList):
         generateQueGraph(cat, "DEP")
         generateQueGraph(cat, "POS")
 
-
-def highlightred():
-    print()
-
-
-
-
 def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
     
     for cls in overall:
@@ -290,17 +327,17 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
         
         headers = {
             "selector": "th:not(.index_name)",
-            "props": "background-color: #800000; color: white; text-align: center",
+            "props": "background-color: #5b9bd5; color: white; text-align: center",
             
             }
         
-        properties = {"border": "1px solid black", "width": "65px", "text-align": "center"}
+        properties = {"border": "1px solid black", "width": "65px", "text-align": "center", "padding" : "2px 5px"}
 
         # Function to apply styling based on 25% of the standard deviation
         def highlight_outliers(val, mean, std_dev):
             threshold = (0.25 * std_dev) + std_dev
-            #if val == 0:
-                #return ''  # Ignore zero values
+            if val == 0:
+                return ''  # Ignore zero values
             if val < mean - threshold or val > mean + threshold:
                 return 'background-color: yellow'
             return ''
@@ -344,9 +381,6 @@ def generateWordTable(arr, hipo, companyname, overall, typList, typ):
 
     blankIndex = ['']*len(df)
     df.index=blankIndex
-
-
-
 
     end = ""
     if typ == "Department":
@@ -630,9 +664,6 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
 
     generateClusterTable(deparments, hipo, companyname, clusters, departList, "DEP")
     generateClusterTable(positions, hipo, companyname, clusters, posList, "POS")
-
-def tableSyle(df):
-    print("Todo")
 
 print("Generating Word Assosiation Graphics")
 generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
