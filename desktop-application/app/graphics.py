@@ -337,7 +337,7 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
         def highlight_outliers(val, mean, std_dev):
             threshold = (0.25 * std_dev) + std_dev
             if val == 0:
-                return ''  # Ignore zero values
+                return 'background-color: red'  # Ignore zero values
             if val < mean - threshold or val > mean + threshold:
                 return 'background-color: yellow'
             return ''
@@ -393,10 +393,16 @@ def generateWordTable(arr, hipo, companyname, overall, typList, typ):
 
 def generateWordGraphic(arr, name, tUser, chart, fnt):
     newchart = chart.copy()
+    newchart2 = chart.copy()
+
     seg1 = 0
+    seg1Words = []
     seg2 = 0
+    seg2Words = []
     seg3 = 0
+    seg3Words = []
     seg4 = 0
+    seg4Words = []
 
     pos = 0
     neg = 0
@@ -406,18 +412,81 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
             neg += 1
             if (word.total / tUser) < .5:
                 seg1 +=1
+                seg1Words.append(word)
             else:
                 seg2 +=1
+                seg2Words.append(word)
         elif word.ident == "pos":
             pos += 1
             if (word.total / tUser) >= .5:
                 seg3 +=1
+                seg3Words.append(word)
             else:
                 seg4 +=1
+                seg4Words.append(word)
+
+    seg1Words.sort(key=lambda x: x.total, reverse=True)
+    seg1Words=seg1Words[:10]
+    seg2Words.sort(key=lambda x: x.total, reverse=True)
+    seg2Words=seg2Words[:10]
+    seg3Words.sort(key=lambda x: x.total, reverse=True)
+    seg3Words=seg3Words[:10]
+    seg4Words.sort(key=lambda x: x.total, reverse=True)
+    seg4Words=seg4Words[:10]
 
     #have totals for all words
     draw = ImageDraw.Draw(newchart)
 
+    draw2 = ImageDraw.Draw(newchart2)
+
+    counter = 1
+    x = 200
+    y = 650
+    for i in seg1Words:
+        draw2.text((x,y),i.name, "black", font=fnt)
+        counter+=1
+        y += 50
+        if counter == 6:
+            y = 650
+        if counter > 5:
+            x = 600
+
+    counter = 1
+    x = 200
+    y = 250
+    for i in seg2Words:
+        draw2.text((x,y),i.name, "white", font=fnt)
+        counter+=1
+        y += 50
+        if counter == 6:
+            y = 250
+        if counter > 5:
+            x = 600
+
+    counter = 1
+    x = 1100
+    y = 250
+    for i in seg3Words:
+        draw2.text((x,y),i.name, "white", font=fnt)
+        counter+=1
+        y += 50
+        if counter == 6:
+            y = 250
+        if counter > 5:
+            x = 1500
+
+    counter = 1
+    x = 1100
+    y = 650
+    for i in seg4Words:
+        draw2.text((x,y),i.name, "white", font=fnt)
+        counter+=1
+        y += 50
+        if counter == 6:
+            y = 650
+        if counter > 5:
+            x = 1500
+        
     #x0, y0, x1, y1
     #center points for segments
     #seg1 - x607 y740
@@ -461,8 +530,12 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     draw.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
     draw.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
 
+    draw2.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
+    draw2.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
+
     #newchart.show()
     newchart.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart" + ".png", "PNG")
+    newchart2.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart_Words" + ".png", "PNG")
 
 def generateWordGraph(arr, companyname, overall, typList, typ):
     #determine the centerline
@@ -696,14 +769,14 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
     generateClusterTable(deparments, hipo, companyname, clusters, departList, "DEP")
     generateClusterTable(positions, hipo, companyname, clusters, posList, "POS")
 
-#print("Generating Word Assosiation Graphics")
-#generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-#generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
-#print("Word Assosiation Graphics Complete")
+print("Generating Word Assosiation Graphics")
+generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
+generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
+print("Word Assosiation Graphics Complete")
 
-#print("Generating Question Graphics")
-#generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-#generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
-#print ("Question Graphics Complete")
+print("Generating Question Graphics")
+generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
+generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
+print ("Question Graphics Complete")
 
-addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)
+#addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)
