@@ -197,85 +197,53 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
 
 #might only need it for position analysis
 def generateQueGraph(category, typ):
-    #create the data frame
+    # Create the data frame
     names = []
     vals = []
     cline = int(category.pscore)
 
-
     if typ == "DEP":
-
-
-        plt.title(category.catigory + " Department Analysis")
-        plt.xlabel('Department')
-        plt.ylabel('Score')
+        plt.title(f"{category.catigory} Department Analysis", fontsize=16)
+        plt.xlabel('Department', fontsize=14)
+        plt.ylabel('Score', fontsize=14)
         for dep in category.departments:
             names.append(dep.name)
             vals.append(int(dep.pscore))
 
     elif typ == "POS":
-
-
-        plt.title(category.catigory + " Position Analysis")
-        plt.xlabel('Position')
-        plt.ylabel('Score')
+        plt.title(f"{category.catigory} Position Analysis", fontsize=16)
+        plt.xlabel('Position', fontsize=14)
+        plt.ylabel('Score', fontsize=14)
         for pos in category.positions:
             names.append(pos.name)
             vals.append(int(pos.pscore))
 
-
     names.append('HiPo')
     vals.append(category.hipo.pscore)
 
-    #sort to sort the names at the same time as the values to maintain correct order
-    n = len(names)
-    swapped = False
-    for i in range(n-1):
-        for j in range(0, n-i-1):
-            if vals[j]>vals[j+1]:
-                swapped = True
-                vals[j], vals[j + 1] = vals[j + 1], vals[j]
-                names[j], names[j + 1] = names[j + 1], names[j]
+    # Sort names and vals
+    sorted_data = sorted(zip(vals, names))
+    vals, names = zip(*sorted_data)
 
-        if not swapped:
-            break
+    vals = [val - cline for val in vals]
+    colors = ['g' if val >= 0 else 'r' for val in vals]
 
-    for i in range(len(vals)):
-        vals[i] = vals[i] - cline
-
-    lrgst = vals[len(vals)-1]
-    smlst = vals[0]
-
-    c = []
-
-    for i in range(len(vals)):
-        if vals[i] < 0:
-            c.append('r')
-        else:
-            c.append('g')
-
-            
-    x_axis = names
-    y_axis = vals
+    # Plotting
+    plt.figure(figsize=(12, 8))
     plt.ylim(-25, 25)
-    plt.axhline(y=0, color='grey', linestyle='--')
+    plt.axhline(y=0, color='grey', linestyle='--', linewidth=1)
+    plt.bar(names, vals, width=0.75, color=colors)
+    plt.grid(axis='y', linestyle='--', linewidth=0.5)
 
-    #d = {"department": x_axis, "score": y_axis}
-    #df = pd.DataFrame(d)
-    #df['positive'] = df['scores' > 0]
+    for i, (name, val) in enumerate(zip(names, vals)):
+        plt.text(i, val // 2, int(val), ha='center', weight='bold', fontsize=10)
 
-    #df['values'].plot(kind='barh',color=df.positive.map({True: 'g', False: 'r'}))
-    plt.bar(x_axis, y_axis, width=1, color= c)
-
-    for i in range(len(x_axis)):
-        plt.text(i, y_axis[i]//2, int(y_axis[i]), ha = 'center', weight='bold')
-
-    #legend()
-    #axis([0, 10, 0, 8])
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.tight_layout(pad=2)
     plt.subplots_adjust(bottom=0.2)
-    plt.xticks(rotation=30, ha='right')
-    #plt.show()
-    plt.savefig("./desktop-application/app/graphics/questiongraphs/" + typ + "_" + category.catigory + 'barchart.png', dpi=200)
+
+    plt.savefig(f"./desktop-application/app/graphics/questiongraphs/{typ}_{category.catigory}barchart.png", dpi=200)
     plt.cla()
     plt.close()
 
@@ -538,212 +506,126 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     newchart2.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart_Words" + ".png", "PNG")
 
 def generateWordGraph(arr, companyname, overall, typList, typ):
-    #determine the centerline
-    neg = 0
-    pos = 0
-    for wrd in overall:
-        if wrd.ident == "neg":
-            neg+=wrd.total
-        elif wrd.ident == "pos":
-            pos+=wrd.total
-    
+    # Determine the centerline
+    pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
+    neg = sum(wrd.total for wrd in overall if wrd.ident == "neg")
     cline = int(pos / (pos + neg) * 100)
 
-    #create the data frame
-    names = []
-    vals = []
-    plt.title(companyname + " Word Association " + typ + " Summary")
-    plt.xlabel(typ)
-    plt.ylabel('Percentage Point Variance')
+    # Create the data frame
+    names = [sec.name for sec in arr]
+    vals = [int(sec.pos / (sec.pos + sec.neg) * 100) for sec in arr]
 
-    for sec in arr:
-            names.append(sec.name)
-            vals.append(int(sec.pos / (sec.pos + sec.neg) * 100))
-    
+    # Sort names and vals in descending order of vals
+    sorted_data = sorted(zip(vals, names), reverse=True)
+    vals, names = zip(*sorted_data)
 
-    #sort to sort the names at the same time as the values to maintain correct order
-    n = len(names)
-    swapped = False
-    for i in range(n-1):
-        for j in range(0, n-i-1):
-            if vals[j]<vals[j+1]:
-                swapped = True
-                vals[j], vals[j + 1] = vals[j + 1], vals[j]
-                names[j], names[j + 1] = names[j + 1], names[j]
+    vals = [val - cline for val in vals]
+    colors = ['g' if val >= 0 else 'r' for val in vals]
 
-        if not swapped:
-            break
-
-    for i in range(len(vals)):
-        vals[i] = vals[i] - cline
-
-    lrgst = vals[len(vals)-1]
-    smlst = vals[0]
-
-    c = []
-
-    for i in range(len(vals)):
-        if vals[i] < 0:
-            c.append('r')
-        else:
-            c.append('g')
-
-    x_axis = names
-    y_axis = vals
+    # Plotting
+    plt.figure(figsize=(12, 8))
+    plt.title(f"{companyname} Word Association {typ} Summary", fontsize=16)
+    plt.xlabel(typ, fontsize=14)
+    plt.ylabel('Percentage Point Variance', fontsize=14)
     plt.ylim(-25, 25)
-    plt.axhline(y=0, color='grey', linestyle='--')
+    plt.axhline(y=0, color='grey', linestyle='--', linewidth=1)
+    plt.bar(names, vals, width=.75, color=colors)
+    plt.grid(axis='y', linestyle='--', linewidth=0.5)
 
-    #d = {"department": x_axis, "score": y_axis}
-    #df = pd.DataFrame(d)
-    #df['positive'] = df['scores' > 0]
+    for i, (name, val) in enumerate(zip(names, vals)):
+        plt.text(i, val // 2, int(val), ha='center', weight='bold', fontsize=10)
 
-    #df['values'].plot(kind='barh',color=df.positive.map({True: 'g', False: 'r'}))
-    plt.bar(x_axis, y_axis, width=.75, color= c)
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.tight_layout(pad=2)
 
-    for i in range(len(x_axis)):
-        plt.text(i, y_axis[i]//2, int(y_axis[i]), ha = 'center', weight='bold')
-
-    #legend()
-    #axis([0, 10, 0, 8])
-    plt.xticks(rotation=30, ha='right')
-    #plt.show()
-    plt.subplots_adjust(bottom=0.2)
-
-    end = ""
-    if typ == "Department":
-        end = "DEP"
-    elif typ == "Position":
-        end = "POS"
-
-    plt.savefig("./desktop-application/app/graphics/wordgraphs/" + end + "_" + "WordBarchart.png", dpi = 200)
+    end = "DEP" if typ == "Department" else "POS"
+    plt.savefig(f"./desktop-application/app/graphics/wordgraphs/{end}_WordBarchart.png", dpi=200)
     plt.cla()
     plt.close()
 
-    #add words to graphic
+    return names  # Return the names array
 
-def addWordstoWordGraph(graph, data, overall, totalP):
-    class tempcats:
+def addWordstoWordGraph(graph, data, overall, totalP, names, fname):
+    class TempCats:
         def __init__(self, name, avg, top, bottom):
-            self.name = name 
+            self.name = name
             self.avg = avg
             self.top = top
             self.bottom = bottom
 
-    graphList = []
-    totalCat = len(data) 
-    #need to load the data
-    #determine if it is positive or negative compared to average
-    #if positive grab the top words 
-
-    #determine the centerline
-    neg = 0
-    pos = 0
-    for wrd in overall:
-        if wrd.ident == "neg":
-            neg+=wrd.total
-        elif wrd.ident == "pos":
-            pos+=wrd.total
-    
+    pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
+    neg = sum(wrd.total for wrd in overall if wrd.ident == "neg")
     cline = int(pos / (pos + neg) * 100)
 
-    #step into the catigoie (departments or positions)
+    graphList = []
     for cat in data:
         compareval = int(cat.pos / (cat.pos + cat.neg) * 100)
-        #grabb all the word with a non zero value
-        
-        pwrd = []
-        nwrd = []
-        for w in cat.words:
-            if w.ident == 'pos' and w.total > 0:
-                pwrd.append(w)
-            elif w.ident == 'neg' and w.total > 0:
-                nwrd.append(w)
+        pwrd = sorted([w for w in cat.words if w.ident == 'pos' and w.total > 0], key=lambda x: x.total, reverse=True)[:8]
+        nwrd = sorted([w for w in cat.words if w.ident == 'neg' and w.total > 0], key=lambda x: x.total, reverse=False)[:8]
 
-        pwrd.sort(key=lambda x: x.total, reverse=True)
-        nwrd.sort(key=lambda x: x.total, reverse=False)
-        while len(pwrd) > 8:
-                pwrd.pop()
-        while len(nwrd) > 8:
-                nwrd.pop()
-            #grap top five pos words and top five neg words
-        
-
-        #need to compare these to overall list
-        c = ''
         top = []
         bottom = []
         for w in overall:
             for cw in pwrd:
                 if cw.name == w.name:
-                    #total word / cat users = percent compared to overall total  / total users = percent
                     tp = cw.total / cat.userTotal
                     op = w.total / totalP
-
-                    if tp > op: #greater
-                        c = '<'
-                        top.append(c+cw.name)
-                    elif tp < op: #less
-                        c = '>'
-                        bottom.append(c+cw.name)
-
-                    
+                    if tp > op:
+                        top.append('<' + cw.name)
+                    elif tp < op:
+                        bottom.append('>' + cw.name)
 
             for cw in nwrd:
                 if cw.name == w.name:
-                    #total word / cat users = percent compared to overall total  / total users = percent
                     tp = cw.total / cat.userTotal
                     op = w.total / totalP
+                    if tp > op:
+                        bottom.append('>' + cw.name)
+                    elif tp < op:
+                        top.append('<' + cw.name)
 
-                    if tp > op: #greater
-                        c = '>'
-                        bottom.append(c+cw.name)
-                    elif tp < op: #less
-                        c = '<'
-                        top.append(c+cw.name)
-
-        graphList.append(tempcats(cat.name, compareval, top, bottom))
-
-
-
+        graphList.append(TempCats(cat.name, compareval, top, bottom))
 
     graph_image = Image.open(graph)
     draw = ImageDraw.Draw(graph_image)
     font_path = "./desktop-application/app/graphics/impact.ttf"
-    image_path = "./desktop-application/app/graphics/wordgraphs/test.png"
+    image_path = "./desktop-application/app/graphics/wordgraphs/" + fname +"_WordstoGraph.png"
 
     try:
-        font = ImageFont.truetype(font_path, 20)
+        font = ImageFont.truetype(font_path, 18)
     except IOError:
         font = ImageFont.load_default()
-    
-    # Dynamically place words on the image
-    bar_width = graph_image.width / len(data)
-    centerline_y = graph_image.height / 2  # Assuming the centerline is at the vertical center of the image
-    
+
+    bar_width = (graph_image.width - 300) / len(data)  # Adjusted for 120px left and 100px right padding
+    centerline_y = (graph_image.height / 2) - 75  # Shift centerline up by 50 pixels
+
+    # Set the text color with increased transparency (alpha value)
+    text_color = (0, 0, 0, 64)  # RGBA (Black with 25% transparency)
+
     for cat in graphList:
         try:
-            idx = [d.name for d in data].index(cat.name)
+            idx = names.index(cat.name)
         except ValueError:
             continue
 
-        bar_x = idx * bar_width + (bar_width / 2)
-        bar_y = int((cat.avg / 100) * graph_image.height / 2 + graph_image.height / 2)
-
+        bar_x = 150 + idx * bar_width + (bar_width / 2)
         top_words = "\n".join(cat.top)
         bottom_words = "\n".join(cat.bottom)
 
-        print(f"Placing top words at ({bar_x}, {centerline_y - 100})")
-        print(f"Placing bottom words at ({bar_x}, {centerline_y + 20})")
+        # Adjust vertical spacing
+        vertical_gap = 25
+        bottom_gap = 100
+        top_y = centerline_y - (len(cat.top) * vertical_gap)
+        bottom_y = centerline_y + bottom_gap
 
-        # Place top words above the centerline
-        draw.text((bar_x, centerline_y - 100), top_words, fill="black", font=font, anchor="ms")
-        # Place bottom words below the centerline
-        draw.text((bar_x, centerline_y + 20), bottom_words, fill="black", font=font, anchor="ms")
+        # Draw the category name at the centerline
+        #draw.text((bar_x, centerline_y), cat.name, fill=text_color, font=font, anchor="ms")
+        draw.text((bar_x, top_y), top_words, fill=text_color, font=font, anchor="ms")
+        draw.text((bar_x, bottom_y), bottom_words, fill=text_color, font=font, anchor="ms")
 
     graph_image.save(image_path)
-    graph_image.show()
         
-
 def generateWordGraphicHub(overall, departments, positions, departList, positionList, hipo, tUsers, chart, fnt):
     #use bubbles in each quadrent possibly percentage in each bubble, tyarget is max size pos in upper left
     #overall
@@ -758,8 +640,10 @@ def generateWordGraphicHub(overall, departments, positions, departList, position
     for pos in positions:
         generateWordGraphic(pos.words, pos.name, pos.userTotal, chart, fnt)
 
-    generateWordGraph(departments, companyname, overall, departList , "Department" )
-    generateWordGraph(positions, companyname, overall, positionList , "Position" )
+    dnames = generateWordGraph(departments, companyname, overall, departList , "Department" )
+    addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", departments, overall, tUsers, dnames, "DEP")
+    pnames =generateWordGraph(positions, companyname, overall, positionList , "Position" )
+    addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/POS_WordBarchart.png", positions, overall, tUsers, pnames, "POS")
 
 def generateWordDataHub(deparments, positions, hipo, companyname, overall, clusters, departList, posList):
     
@@ -778,5 +662,3 @@ print("Generating Question Graphics")
 generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
 generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
 print ("Question Graphics Complete")
-
-#addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", results.wordassessment.departmentScores, results.wordassessment.words, results.wordassessment.userTotal)
