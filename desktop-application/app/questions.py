@@ -7,13 +7,14 @@ import pandas as pd
 
 #quyestion information
 class  question:
-    def __init__(self, qNum, qScore, qCat, qSubCat):
+    def __init__(self, qNum, qScore, qCat, qSubCat, descript):
         self.qNum = qNum
         self.qScore = qScore
         self.qCat = qCat
         self.qSubCat = qSubCat
-qList = []
+        self.descript = descript
 
+qList = []
 #open the csv file
 qfile = pd.read_csv("./desktop-application/app/questionList.csv")
 #print(qfile.to_string())
@@ -22,7 +23,7 @@ qfile = pd.read_csv("./desktop-application/app/questionList.csv")
 def fileCheck(qfile):
     column_names = list(qfile.columns.values)
     #first check to see if correct number of items in list
-    if len(column_names) != 4:
+    if len(column_names) != 5:
         print("Error in list columns: Incorrect Number of Columns")
         return -1
     
@@ -39,15 +40,19 @@ def fileCheck(qfile):
     if column_names[3] != "qSubCat":
         print("Error with frist column: Should be qNum but is currently " + column_names[3])
         return-1
+    if column_names[4] != "descript":
+        print("Error with frist column: Should be qNum but is currently " + column_names[4])
+        return-1
 
 def initQuestion(qList, qfile):
     qNList = qfile['qNum'].tolist()
     qSList = qfile['qScore'].tolist()
     qCList = qfile['qCat'].tolist()
     qSCList = qfile['qSubCat'].tolist()
+    qDList = qfile['descript'].tolist()
 
     for i in qfile.index:
-        qList.append(question(qNList[i], qSList[i], qCList[i], qSCList[i]))
+        qList.append(question(qNList[i], qSList[i], qCList[i], qSCList[i], qDList[i]))
 
 
 #Error Checking

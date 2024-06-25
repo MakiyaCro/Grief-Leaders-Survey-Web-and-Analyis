@@ -1,5 +1,6 @@
 from pptx import Presentation
-from pptx.util import Inches
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
 from PIL import Image
 import os
 
@@ -48,6 +49,44 @@ def add_slide_with_title(prs, layout_index, title_text):
 def add_image_to_slide(slide, image_details, left, top, width):
     slide.shapes.add_picture(image_details.path, Inches(left), Inches(top), Inches(width))
 
+def add_table_to_slide(slide):
+    # Define the number of rows and columns
+    rows, cols = 6, 3
+    left, top, width, height = Inches(0.5), Inches(2), Inches(9), Inches(2)
+    table = slide.shapes.add_table(rows, cols, left, top, width, height).table
+
+    # Set column widths: Attribute (15%), Statement (70%), %Yes (15%)
+    table.columns[0].width = Inches(1.35)
+    table.columns[1].width = Inches(6.3)
+    table.columns[2].width = Inches(1.35)
+
+    # Set the headers
+    table.cell(0, 0).text = "Attribute"
+    table.cell(0, 1).text = "Statement"
+    table.cell(0, 2).text = "%Yes"
+
+    # Set header background color and font size
+    header_fill_color = RGBColor(91, 155, 213)  # #5b9bd5
+    for cell in table.rows[0].cells:
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = header_fill_color
+        cell.text_frame.paragraphs[0].font.size = Pt(12)
+        cell.text_frame.paragraphs[0].font.bold = True
+
+
+    # Set row heights
+    for i in range(rows):
+        table.rows[i].height = Inches(0.6)
+
+    # Set a simple border color for all cells
+    for row in table.rows:
+        for cell in row.cells:
+            if row != table.rows[0]:  # Skip header row
+                cell.fill.solid()
+                #cell.fill.fore_color.rgb = RGBColor(255, 255, 255)  # White background
+            for paragraph in cell.text_frame.paragraphs:
+                paragraph.font.size = Pt(12)
+
 def init_pres_slides(prs, pictures):
     # Add title slide
     slide = add_slide_with_title(prs, 0, "Title Place Holder")
@@ -90,6 +129,14 @@ def init_pres_slides(prs, pictures):
                         for tpic in tfolder.images:
                             if name in tpic.name and typ in tpic.name and 'concat' in tpic.name:
                                 add_image_to_slide(slide, tpic, 6.75, 1.6, 5.5)
+
+                slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
+                for dfolder in pictures:
+                    if dfolder.folder == "dials":
+                        for dialpic in dfolder.images:
+                            if name in dialpic.name:
+                                add_image_to_slide(slide, dialpic, 11.5, 0.025, 1.5)
+                add_table_to_slide(slide)
 
     # Add word graphs slides before word chart
     for folder in pictures:

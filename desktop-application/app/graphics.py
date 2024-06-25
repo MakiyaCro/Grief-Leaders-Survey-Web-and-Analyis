@@ -28,7 +28,7 @@ mf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 100)
 sf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 50)
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
-companyname = "Ranch"
+companyname = "Example Name"
 
 def generateDataframe(typ, array, companyname):
     colList = [typ, companyname]
