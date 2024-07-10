@@ -12,12 +12,12 @@ qNum,qScore,qCat,qSubCat,descript
 11,1,CM,Communication,My company has a well-defined process for implementing change
 12,1,CM,Communication,Company leaders do an effective job of communicating changes
 13,1,CM,Compassion,When changes are announced my company gives people space to experience and communicate their feelings
-14,1,EPS,Compassion,My company offers emotional-wellbeing benefits
-15,1,EPS,Compassion,My company has extremely flexible work policies or benefits
+14,1,EPS,Compassion/Benefits,My company offers emotional-wellbeing benefits
+15,1,EPS,Compassion/Benefits,My company has extremely flexible work policies or benefits
 16,1,CM,Communication,My company does an effective job of communicating the need for change to me
 17,1,CM,Engagement,My company sets lofty but attainable goals
 18,1,CM,Engagement,My company celebrates success
-19,1,EPS,Compassion,My company’s benefits support my emotional well-being
+19,1,EPS,Compassion/Benefits,My company’s benefits support my emotional well-being
 20,1,SrLdr,Communication,The leaders of our company are approachable
 21,1,CM,Compassion,When implementing change our company allows time to adjust
 22,1,CM,Vulnerability,When changes are announced I feel I have the ability to talk to someone about my feelings

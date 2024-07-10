@@ -2,13 +2,18 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from PIL import Image
+import pandas as pd
 import os
+import graphics
 
 imgpath = "./desktop-application/app/graphics/"
 fldrList = ['clustertables', 'dials', 'questiongraphs', 'questiontables', 'wordchart', 'wordgraphs', 'wordtables']
 typList = ['overall', 'department', 'position']
 prs = Presentation("./desktop-application/app/powerpoint/empty.pptx")
+qfile = pd.read_csv("./desktop-application/app/questionList.csv")
+
 pictures = []
+qtg = graphics.qtg
 
 class PresentationDetails:
     def __init__(self, title, date):
@@ -49,43 +54,85 @@ def add_slide_with_title(prs, layout_index, title_text):
 def add_image_to_slide(slide, image_details, left, top, width):
     slide.shapes.add_picture(image_details.path, Inches(left), Inches(top), Inches(width))
 
-def add_table_to_slide(slide):
+def add_table_to_slide(slide, typ, name, dialpic):
     # Define the number of rows and columns
-    rows, cols = 6, 3
-    left, top, width, height = Inches(0.5), Inches(2), Inches(9), Inches(2)
-    table = slide.shapes.add_table(rows, cols, left, top, width, height).table
+    df = None
+    for tb in qtg:
+        if typ in tb.name and name in tb.name:
+            df = tb
+            break
 
-    # Set column widths: Attribute (15%), Statement (70%), %Yes (15%)
-    table.columns[0].width = Inches(1.35)
-    table.columns[1].width = Inches(6.3)
-    table.columns[2].width = Inches(1.35)
+    if df is not None:
+        # Keep only the first two columns
+        df = df.iloc[:, :2]
 
-    # Set the headers
-    table.cell(0, 0).text = "Attribute"
-    table.cell(0, 1).text = "Statement"
-    table.cell(0, 2).text = "%Yes"
+        # Add two new columns in between the remaining columns
+        df.insert(1, 'Attribute', '')
+        df.insert(2, 'Description', '')
 
-    # Set header background color and font size
-    header_fill_color = RGBColor(91, 155, 213)  # #5b9bd5
-    for cell in table.rows[0].cells:
-        cell.fill.solid()
-        cell.fill.fore_color.rgb = header_fill_color
-        cell.text_frame.paragraphs[0].font.size = Pt(12)
-        cell.text_frame.paragraphs[0].font.bold = True
+        # Populate the new columns using the CSV data
+        for index, row in df.iterrows():
+            qNum_value = row.iloc[0]
+            match_row = qfile[qfile['qNum'] == qNum_value]
+            if not match_row.empty:
+                df.at[index, 'Attribute'] = match_row['qSubCat'].values[0]
+                df.at[index, 'Description'] = match_row['descript'].values[0]
 
+        # Sort the DataFrame by the 'Attribute' column alphabetically
+        df = df.sort_values(by='Attribute')
 
-    # Set row heights
-    for i in range(rows):
-        table.rows[i].height = Inches(0.6)
+        #print("Updated DataFrame:")
+        #print(df)
 
-    # Set a simple border color for all cells
-    for row in table.rows:
-        for cell in row.cells:
-            if row != table.rows[0]:  # Skip header row
+        entries_per_slide = 10
+
+        for start_row in range(0, df.shape[0], entries_per_slide):
+            slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
+            add_image_to_slide(slide, dialpic, 11.5, 0.025, 1.5)
+
+            end_row = min(start_row + entries_per_slide, df.shape[0])
+            df_slice = df.iloc[start_row:end_row]
+
+            # Define the number of rows and columns based on the slice
+            rows, cols = df_slice.shape[0] + 1, df_slice.shape[1] - 1  # +1 for the header row, -1 to ignore first column
+            left, top, width, height = Inches(1.25), Inches(1.75), Inches(9), Inches(2)  # Shifted right by 1 inch
+            table = slide.shapes.add_table(rows, cols, left, top, width, height).table  # Exclude the first column
+
+            # Set column widths: Adjust based on your specific needs
+            table.columns[0].width = Inches(2)
+            table.columns[1].width = Inches(8)
+            table.columns[2].width = Inches(1)
+
+            # Set the headers, excluding the first column
+            table.cell(0, 0).text = 'Attribute'
+            table.cell(0, 1).text = 'Description'
+            table.cell(0, 2).text = '%Yes'
+
+            # Set header background color and font size
+            header_fill_color = RGBColor(91, 155, 213)  # #5b9bd5
+            for cell in table.rows[0].cells:
                 cell.fill.solid()
-                #cell.fill.fore_color.rgb = RGBColor(255, 255, 255)  # White background
-            for paragraph in cell.text_frame.paragraphs:
-                paragraph.font.size = Pt(12)
+                cell.fill.fore_color.rgb = header_fill_color
+                cell.text_frame.paragraphs[0].font.size = Pt(12)
+                cell.text_frame.paragraphs[0].font.bold = True
+                cell.text_frame.paragraphs[0].font.color.rgb = RGBColor(0, 0, 0)  # Black text
+
+            # Set row heights
+            for i in range(rows):
+                table.rows[i].height = Inches(0.4)
+
+            # Fill in the table with data from the DataFrame slice, excluding the first column
+            for row in range(1, rows):  # Start from 1 to skip the header row
+                for col in range(1, cols + 1):  # Start from 1 to skip the first column
+                    cell = table.cell(row, col - 1)  # Adjust column index to match table
+                    cell.text = str(df_slice.iloc[row - 1, col])
+                    cell.fill.solid()
+                    if row % 2 == 0:
+                        cell.fill.fore_color.rgb = RGBColor(255, 255, 255)  # White background
+                    else:
+                        cell.fill.fore_color.rgb = RGBColor(173, 216, 230)  # Light blue background
+                    for paragraph in cell.text_frame.paragraphs:
+                        paragraph.font.size = Pt(12)
 
 def init_pres_slides(prs, pictures):
     # Add title slide
@@ -130,13 +177,13 @@ def init_pres_slides(prs, pictures):
                             if name in tpic.name and typ in tpic.name and 'concat' in tpic.name:
                                 add_image_to_slide(slide, tpic, 6.75, 1.6, 5.5)
 
-                slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
+                #slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
                 for dfolder in pictures:
                     if dfolder.folder == "dials":
                         for dialpic in dfolder.images:
                             if name in dialpic.name:
-                                add_image_to_slide(slide, dialpic, 11.5, 0.025, 1.5)
-                add_table_to_slide(slide)
+                                dialtemp = dialpic
+                add_table_to_slide(slide, typ, name, dialtemp)
 
     # Add word graphs slides before word chart
     for folder in pictures:

@@ -30,6 +30,8 @@ pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
 companyname = "Example Name"
 
+qtg = []
+
 def generateDataframe(typ, array, companyname):
     colList = [typ, companyname]
     for i in range(len(array)):
@@ -132,11 +134,16 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
                 tempArr.append(int(q.res))
                 break
 
-        #print(tempArr)
+        #print(tempArr)0
         df.loc[len(df)] = tempArr
 
     # concatinate based off of standard deviation
     newdf = tableConcat(df)
+
+    newdf.name = catigory.catigory + "_" + endding
+
+    qtg.append(newdf)
+
     #print(newdf)
     #print(df)
 
@@ -190,6 +197,9 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
 
     dfi.export(style, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_full.png")
     dfi.export(style2, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_concat.png")
+
+
+
     del df
     del newdf
     del style
