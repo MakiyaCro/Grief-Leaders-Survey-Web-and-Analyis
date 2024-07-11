@@ -25,7 +25,9 @@ class assessment:
 class noscore:
     def __init__(self, name):
         self.name = name
-        self.total = 0
+        
+        self.userTotal = 0
+        self.participationScore = 0
 
 class Catscores:
     def __init__(self, catigory, hipo):
@@ -93,20 +95,42 @@ def initCategories(cat, depList, posList, mainstore):
         initPositions(posList, c.positions)
 
 def initNoScore(typeList, mainstore):
-    for type in typeList:
-        mainstore.append(noscore(str(type.name)))
+    for typ in typeList:
+        mainstore.append(noscore(typ))
 
-def noScore(userList, typeList):
+def noScore(userList, departList, positionList, depnoscore, posnoscore, hiponoscore):
+    initNoScore(departList, depnoscore)
+    initNoScore(positionList, posnoscore)
+    hiponoscore.append(noscore("hipo"))
+
+
     for user in userList:
-        if user.score == -1:
-            for type in typeList:
-                if type.name == user.dprt:
-                    type.total += 1
+        if user.hipo == 'Yes':
+            hiponoscore[0].userTotal += 1
+            if user.score == -1:
+                hiponoscore[0].participationScore += 1
 
-def calsNoscores(userList, dep, pos, hipo):
-    noScore(userList, dep)
-    noScore(userList, pos)
-    noScore(userList, hipo)
+        for d in depnoscore:
+            if d.name == user.dprt:
+                d.userTotal += 1
+                if user.score == -1:
+                    d.participationScore += 1
+                break
+
+        for p in posnoscore:
+            if p.name == user.stt:
+                p.userTotal += 1
+                if user.score == -1:
+                    p.participationScore += 1
+                break
+
+    hiponoscore[0].participationScore = (hiponoscore[0].userTotal-hiponoscore[0].participationScore) / hiponoscore[0].userTotal
+
+    for d in depnoscore:
+        d.participationScore = (d.userTotal-d.participationScore) / d.userTotal
+
+    for p in posnoscore:
+        p.participationScore = (p.userTotal-p.participationScore) / p.userTotal
 
 def removeQuestions(catName, questions):
     #walk through the list of questions and return a list with only the questions for that category
@@ -251,6 +275,9 @@ def generateWeightedScore(categories, tpScore):
 #init shells for data
 initCategories(assessment.cat, assessment.departList, assessment.positionList, assessment.categories)
 assignQuestions(assessment.categories, assessment.quesList)
+
+noScore(assessment.userList, assessment.departList, assessment.positionList, assessment.depnoscore, assessment.posnoscore, assessment.hiponoscore)
+
 parseAnswers(assessment.categories, assessment.userList, assessment.quesList)
 print("Question Data Loaded Successfully")
 

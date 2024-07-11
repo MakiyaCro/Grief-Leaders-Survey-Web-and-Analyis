@@ -74,6 +74,11 @@ def generateAllDials(categories, dial, pointer, fnt, companyname, overall):
 
     #composite will be created with the powerpoint
 
+def generateParticipationGraph():
+    #gather data from csv?
+    
+    print("temp")
+
 def standarddeviation(data, mean):
     sum = 0
     for i in range(len(data)):
@@ -603,7 +608,7 @@ def addWordstoWordGraph(graph, data, overall, totalP, names, fname):
     image_path = "./desktop-application/app/graphics/wordgraphs/" + fname +"_WordstoGraph.png"
 
     try:
-        font = ImageFont.truetype(font_path, 18)
+        font = ImageFont.truetype(font_path, 20)
     except IOError:
         font = ImageFont.load_default()
 
@@ -611,7 +616,7 @@ def addWordstoWordGraph(graph, data, overall, totalP, names, fname):
     centerline_y = (graph_image.height / 2) - 75  # Shift centerline up by 50 pixels
 
     # Set the text color with increased transparency (alpha value)
-    text_color = (0, 0, 0, 64)  # RGBA (Black with 25% transparency)
+    text_color = (0, 0, 0, 255)  # RGBA (Black with 25% transparency)
 
     for cat in graphList:
         try:
@@ -663,12 +668,12 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
     generateClusterTable(deparments, hipo, companyname, clusters, departList, "DEP")
     generateClusterTable(positions, hipo, companyname, clusters, posList, "POS")
 
-print("Generating Word Assosiation Graphics")
-generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
-print("Word Assosiation Graphics Complete")
-
 print("Generating Question Graphics")
 generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
 generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
 print ("Question Graphics Complete")
+
+print("Generating Word Assosiation Graphics")
+generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
+generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
+print("Word Assosiation Graphics Complete")

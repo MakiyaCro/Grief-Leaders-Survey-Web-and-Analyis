@@ -163,7 +163,7 @@ def init_pres_slides(prs, pictures):
                 typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('barchart', '')
 
                 slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
-                add_image_to_slide(slide, pic, 1, 2, 5.5)
+                add_image_to_slide(slide, pic, 1, 1.6, 5.5)
 
                 for dfolder in pictures:
                     if dfolder.folder == "dials":
@@ -175,7 +175,7 @@ def init_pres_slides(prs, pictures):
                     if tfolder.folder == "questiontables":
                         for tpic in tfolder.images:
                             if name in tpic.name and typ in tpic.name and 'concat' in tpic.name:
-                                add_image_to_slide(slide, tpic, 6.75, 1.6, 5.5)
+                                add_image_to_slide(slide, tpic, 6.75, 1.7, 5.5)
 
                 #slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
                 for dfolder in pictures:
