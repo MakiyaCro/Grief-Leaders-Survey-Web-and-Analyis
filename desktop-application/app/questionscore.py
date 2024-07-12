@@ -17,6 +17,7 @@ class assessment:
     depnoscore = []
     posnoscore = []
     hiponoscore = []
+    overallnoscore = []
 
     #overall score
     tpScore = 0
@@ -98,13 +99,17 @@ def initNoScore(typeList, mainstore):
     for typ in typeList:
         mainstore.append(noscore(typ))
 
-def noScore(userList, departList, positionList, depnoscore, posnoscore, hiponoscore):
+def noScore(userList, departList, positionList, depnoscore, posnoscore, hiponoscore, overallnoscore):
     initNoScore(departList, depnoscore)
     initNoScore(positionList, posnoscore)
-    hiponoscore.append(noscore("hipo"))
-
+    hiponoscore.append(noscore("Hipo"))
+    overallnoscore.append(noscore("Overall"))
 
     for user in userList:
+        overallnoscore[0].userTotal += 1
+        if user.score == -1:
+            overallnoscore[0].participationScore += 1
+
         if user.hipo == 'Yes':
             hiponoscore[0].userTotal += 1
             if user.score == -1:
@@ -124,13 +129,14 @@ def noScore(userList, departList, positionList, depnoscore, posnoscore, hiponosc
                     p.participationScore += 1
                 break
 
-    hiponoscore[0].participationScore = (hiponoscore[0].userTotal-hiponoscore[0].participationScore) / hiponoscore[0].userTotal
+    hiponoscore[0].participationScore = ((hiponoscore[0].userTotal-hiponoscore[0].participationScore) / hiponoscore[0].userTotal)*100
+    overallnoscore[0].participationScore = ((overallnoscore[0].userTotal-overallnoscore[0].participationScore) / overallnoscore[0].userTotal)*100
 
     for d in depnoscore:
-        d.participationScore = (d.userTotal-d.participationScore) / d.userTotal
+        d.participationScore = ((d.userTotal-d.participationScore) / d.userTotal)*100
 
     for p in posnoscore:
-        p.participationScore = (p.userTotal-p.participationScore) / p.userTotal
+        p.participationScore = ((p.userTotal-p.participationScore) / p.userTotal)*100
 
 def removeQuestions(catName, questions):
     #walk through the list of questions and return a list with only the questions for that category
@@ -276,7 +282,7 @@ def generateWeightedScore(categories, tpScore):
 initCategories(assessment.cat, assessment.departList, assessment.positionList, assessment.categories)
 assignQuestions(assessment.categories, assessment.quesList)
 
-noScore(assessment.userList, assessment.departList, assessment.positionList, assessment.depnoscore, assessment.posnoscore, assessment.hiponoscore)
+noScore(assessment.userList, assessment.departList, assessment.positionList, assessment.depnoscore, assessment.posnoscore, assessment.hiponoscore, assessment.overallnoscore)
 
 parseAnswers(assessment.categories, assessment.userList, assessment.quesList)
 print("Question Data Loaded Successfully")

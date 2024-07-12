@@ -1,224 +1,165 @@
-from fpdf import FPDF
-import pandas as pd
-import matplotlib.pyplot as plt
-import dataframe_image as dfi
-import math
-import numpy as np
-#from pylab import title, figure, xlabel, ylabel, xticks, bar, legend, axis, savefig, show, cla
-import score
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+import csv
+import os
+from PIL import Image as PILImage
+from io import BytesIO
 
+# Import the necessary modules
+import users
+import questionscore
+import wordassociation
 
-#Constant Percentage for standard deviation
-CUTOFF = 15
+def generate_individual_report(user):
+    pdf_filename = f"report_{user.usrName}.pdf"
+    doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+    styles = getSampleStyleSheet()
+    elements = []
 
-class results:
-    assessment = score.assessment
+    # Title
+    elements.append(Paragraph(f"Cultural Assessment Report Prepared For", styles['Title']))
+    elements.append(Paragraph(f"{user.fName} {user.lName}", styles['Title']))
+    elements.append(Spacer(1, 0.5*inch))
 
-#create header and footer for document
-#this can include images / titles
-class PDF(FPDF):
-    def header(self):
-        #logo
-        #can add in future
-        #font
-        self.set_font('helvetica', 'B', 20)
-        #Title
-        self.cell(0, 10, 'GriefLeaders Summary', border=False, ln=1, align='C')
-        #linebreak
-        self.ln(20)
+    # Overall Scores
+    elements.append(Paragraph("Overall Scores", styles['Heading2']))
+    # TODO: Insert dashboard dials image here
+    elements.append(Paragraph("(Insert dashboard dials image here)", styles['Normal']))
+    elements.append(Spacer(1, 0.25*inch))
 
-    def footer(self):
-        #det the position
-        self.set_y(-15)
-        #set font
-        self.set_font('helvetica', 'I', 10)
-        #page number
-        self.cell(0, 10, f'Page {self.page_no()}/{{nb}}', align='C')
-
-
-def createCatGraph(cName):
-    #create the data frame
-    plt.title(cName.catigory + " Department Analysis")
-    plt.xlabel('Department')
-    plt.ylabel('Score')
-
-    names = []
-    vals = []
-    cline = int(cName.pScore)
+    # Potential Improvement Areas
+    elements.append(Paragraph("Potential Improvement Areas", styles['Heading2']))
     
-
-    for dep in cName.depWeights:
-        names.append(dep.name)
-        vals.append(int(dep.pScore))
-
-    names.append('HiPo')
-    vals.append(cName.hipopScore)
-
-    #sort to sort the names at the same time as the values to maintain correct order
-    n = len(names)
-    swapped = False
-    for i in range(n-1):
-        for j in range(0, n-i-1):
-            if vals[j]>vals[j+1]:
-                swapped = True
-                vals[j], vals[j + 1] = vals[j + 1], vals[j]
-                names[j], names[j + 1] = names[j + 1], names[j]
-
-        if not swapped:
-            break
-
-    for i in range(len(vals)):
-        vals[i] = vals[i] - cline
-
-    lrgst = vals[len(vals)-1]
-    smlst = vals[0]
-
-    c = []
-
-    for i in range(len(vals)):
-        if vals[i] < 0:
-            c.append('r')
-        else:
-            c.append('g')
-
-            
-    x_axis = names
-    y_axis = vals
-    plt.ylim(-25, 25)
-    plt.axhline(y=0, color='grey', linestyle='--')
-
-    #d = {"department": x_axis, "score": y_axis}
-    #df = pd.DataFrame(d)
-    #df['positive'] = df['scores' > 0]
-
-    #df['values'].plot(kind='barh',color=df.positive.map({True: 'g', False: 'r'}))
-    plt.bar(x_axis, y_axis, width=1, color= c)
-
-    for i in range(len(x_axis)):
-        plt.text(i, y_axis[i]//2, int(y_axis[i]), ha = 'center', weight='bold')
-
-    #legend()
-    #axis([0, 10, 0, 8])
-    plt.xticks(rotation=30, ha='right')
-    #plt.show()
-    plt.savefig(cName.catigory + 'barchart.png')
-    plt.cla()
-    plt.close()
-    pdf.image(cName.catigory +'barchart.png', x = None, y = None, w = 200, h = 0, type = '', link = '')
-
-def standarddeviation(data, mean):
-    sum = 0
-    for i in range(len(data)):
-        sum += (data[i] - mean)**2
+    # Load question data
+    questions = load_questions('questionList.csv')
     
-    stdrd = math.sqrt(sum/len(data))
-    return stdrd
+    # Create the improvement areas table
+    table_data = [
+        ['Category', 'RFP', 'EPS', 'CM', 'Ldr Spvsr', 'Sr. Ldr']
+    ]
+    subcategories = set(q['qSubCat'] for q in questions)
+    for subcat in sorted(subcategories):
+        row = [subcat]
+        for cat in ['RFP', 'EPS', 'CM', 'LdrSpv', 'SrLdr']:
+            score = calculate_score(user, questions, subcat, cat)
+            color = get_color_for_score(score)
+            row.append(color)
+        table_data.append(row)
 
-#the bigger the std the mopve variability  ---- what departments lie outside the
-# +-1 or +-20 std - more than 10 percent - flag as a question wioth large variability
-# what deparments are driving that variablity --- any deparment that is outside +-10 percent (might adjust)
-# may not talk about positive 
-# questions with the highest variability -  might display - entire section standard deviation
-# check the questions that are driving the respoonse and then break down into departments
-# show subcat on table
-def tableConcat(df):
-    #walk through each row passed in and calculate the standard deviation for the numbers given
-    temp = df
-    #keeps tracks of the rows that need to be deleted
-    flagarr = []
-    stdarr = []
-    arr = temp.to_numpy()
-    #print(arr)
-    for row in arr:
-        avg = row[1]
-        dscores = row.tolist()
-        
-        #remove the index, average, and hipo
-        dscores.pop(0)
-        dscores.pop(0)
-        dscores.pop()
-        stdrd = standarddeviation(dscores, avg)
-        if stdrd <= CUTOFF:
-            #means everyone submitted the same answer and can leave out of the report table
-            flagarr.append(row[0])
-        else:
-            stdarr.append(int(stdrd))
+    table = Table(table_data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (1, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (1, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 0.25*inch))
 
-        
-    #flagarr contains the questions that do not have high standard deviation
-    #remove questions that are not more than the requested std
-    for i in flagarr:
-        temp = temp[temp['QN'] != i]
+    # Word Association Results
+    elements.append(Paragraph("Word Association Results", styles['Heading2']))
+    # TODO: Insert Word Association Summary Matrix here
+    elements.append(Paragraph("(Insert Word Association Summary Matrix here)", styles['Normal']))
+    elements.append(Spacer(1, 0.25*inch))
 
-    temp['STD'] = stdarr
+    # Word Association Pattern Analysis
+    elements.append(Paragraph("Word Association Pattern Analysis", styles['Heading2']))
+    pattern_data = [
+        ['Pattern', 'Analysis'],
+        ['Toxic Environment', get_pattern_analysis(user, 'Toxic')],
+        ['Burnout / Engagement Potential', get_pattern_analysis(user, 'Burnout-Disengaged')],
+        ['Respect For People Culture', get_pattern_analysis(user, 'RFP')],
+        ['Emotional/Psychological Safety Health', get_pattern_analysis(user, 'EPS')],
+        ['Leadership Health', get_pattern_analysis(user, 'Leadership')],
+        ['Moral Compass', get_pattern_analysis(user, 'Moral Compass')]
+    ]
+    pattern_table = Table(pattern_data)
+    pattern_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    elements.append(pattern_table)
+    elements.append(Spacer(1, 0.25*inch))
 
-    return temp
+    # Contact Information
+    elements.append(Paragraph("To discuss this assessment summary in more detail contact Anthony Casablanca at a.casablanca@griefleaders.com to set up a complementary session.", styles['Normal']))
+    elements.append(Paragraph("Or book an appointment directly through our Calendly link https://calendly.com/a-casablanca/60min", styles['Normal']))
 
-def tableSyle(df):
-    print("Todo")
+    doc.build(elements)
+    return pdf_filename
 
-def createDataTable(cName):
-    colList = ["QN", "Company"]
-    #change to compnay name or abreviation
-    for i in range(len(results.assessment.departList)):
-        colList.append(results.assessment.departList[i])
-    colList.append("Hipo")
+def load_questions(filename):
+    questions = []
+    with open(filename, 'r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            questions.append(row)
+    return questions
 
-    df = pd.DataFrame(columns= colList)
-    df.name = cName.catigory
+def calculate_score(user, questions, subcat, cat):
+    relevant_questions = [q for q in questions if q['qSubCat'] == subcat and q['qCat'] == cat]
+    if not relevant_questions:
+        return None
     
-    for ques in cName.catQues:
-            tempArr = [ques.qNum, int(ques.tScoreRes)]
-            for dep in ques.department:
-                tempArr.append( + int(dep.score))
-            tempArr.append(int(ques.hipoRes))
-            #print(tempArr)
-            df.loc[len(df)] = tempArr
-
-    # concatinate based off of standard deviation
-    newdf = tableConcat(df)
-    print(newdf)
-    print(df)
+    total_score = 0
+    max_score = 0
+    for question in relevant_questions:
+        q_num = int(question['qNum'])
+        if q_num <= len(user.answers):
+            answer = user.answers[q_num - 1]
+            if answer == 'Yes':
+                total_score += int(question['qScore'])
+            max_score += int(question['qScore'])
     
-    blankIndex = ['']*len(df)
-    df.index=blankIndex
-    #print(df)
-    dfi.export(df, df.name + "table.png")
-    pdf.image(df.name +'table.png', x = None, y = None, w = 200, h = 0, type = '', link = '')
-    del df
-    del newdf
-    #print(df)
+    if max_score == 0:
+        return None
+    return total_score / max_score
 
+def get_color_for_score(score):
+    if score is None:
+        return colors.white
+    if score < 0.5:
+        return colors.red
+    elif score < 0.75:
+        return colors.yellow
+    else:
+        return colors.green
 
-#create pdf object
-pdf = PDF('P', 'mm', 'Letter')
+def get_pattern_analysis(user, pattern):
+    # This is a placeholder function. You'll need to implement the actual analysis
+    # based on your word association data and scoring system
+    return 'Analysis not implemented'
 
-#get the total page number
-pdf.alias_nb_pages()
+def generate_all_reports():
+    for user in users.userList:
+        if user.score != -1:
+            generate_individual_report(user)
+    print(f"Generated reports for {len([u for u in users.userList if u.score != -1])} users")
 
-#set auto page break
-pdf.set_auto_page_break(auto=True, margin=15)
-
-# Add a Page
-pdf.add_page()
-pdf.set_font('helvetica', '', 10)
-
-pdf.cell(40, 5, "The Overall Score is: %" + str(int(results.assessment.pScore)), ln=True)
-pdf.cell(40, 5, 'The Catigory Breakdown:', ln=True)
-for cat in results.assessment.categories:
-    pdf.cell(40, 5, cat.catigory + " Score: %" + str(int(cat.pScore)), ln=True)
-pdf.cell(0, 10, '', ln=True)
-
-pdf.add_page()
-
-for cat in results.assessment.categories:
-    createCatGraph(cat)
-    createDataTable(cat)
-    
-    pdf.cell(40, 5, cat.catigory + " Score: %" + str(int(cat.pScore)) + " ---Hipo: %" + str(int(cat.hipopScore)), ln=True)
-    for dep in cat.depWeights:
-        pdf.cell(30, 5, dep.name + ": %" + str(int(dep.pScore)), ln=True)
-    pdf.cell(0, 10, '', ln=True)
-
-
-pdf.output('test2.pdf', 'F')
+if __name__ == "__main__":
+    generate_all_reports()

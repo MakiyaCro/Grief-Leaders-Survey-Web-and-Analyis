@@ -7,7 +7,7 @@ import os
 import graphics
 
 imgpath = "./desktop-application/app/graphics/"
-fldrList = ['clustertables', 'dials', 'questiongraphs', 'questiontables', 'wordchart', 'wordgraphs', 'wordtables']
+fldrList = ['clustertables', 'dials', 'participation', 'questiongraphs', 'questiontables', 'wordchart', 'wordgraphs', 'wordtables']
 typList = ['overall', 'department', 'position']
 prs = Presentation("./desktop-application/app/powerpoint/empty.pptx")
 qfile = pd.read_csv("./desktop-application/app/questionList.csv")
@@ -154,6 +154,19 @@ def init_pres_slides(prs, pictures):
                 }
                 if pic.name in positions:
                     add_image_to_slide(slide, pic, *positions[pic.name])
+
+    for folder in pictures:
+        if folder.folder == 'participation':
+            for pic in folder.images:
+                tempname = pic.name.replace('.png', '')
+                typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('barchart', '')
+                if typ == "DEP":
+                    slide = add_slide_with_title(prs, 3, f"Department {name}")
+                else:
+                    slide = add_slide_with_title(prs, 3, f"Position {name}")
+                
+                add_image_to_slide(slide, pic, 0.5, 1.5, 5.625)
+
 
     # Add question graphs slides
     for folder in pictures:

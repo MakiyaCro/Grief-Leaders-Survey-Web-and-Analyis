@@ -74,10 +74,52 @@ def generateAllDials(categories, dial, pointer, fnt, companyname, overall):
 
     #composite will be created with the powerpoint
 
-def generateParticipationGraph():
-    #gather data from csv?
-    
-    print("temp")
+def generateParticipationGraph(typ, hipo, overall, title):
+    # Combine the overall object at the start of the typ array and add the hipo object at the end
+    data = [overall] + typ + [hipo]
+
+    # Extract the names and participation scores
+    names = [obj.name for obj in data]
+    scores = [obj.participationScore for obj in data]
+
+    # Define colors based on the participation scores
+    colors = []
+    for score in scores:
+        if score > 70:
+            colors.append('green')
+        elif score < 40:
+            colors.append('red')
+        else:
+            colors.append('gray')
+
+    # Create the bar graph
+    fig, ax = plt.subplots()
+
+    ax.bar(names, scores, color=colors)
+
+    # Set the title and labels
+    ax.set_title("Participation By " + title)
+    ax.set_xlabel(title)
+    ax.set_ylabel('Participation Score (%)')
+
+    # Rotate the x-axis labels for better readability
+    plt.xticks(rotation=45, ha='right')
+
+    # Display the percentage scores on top of the bars with two decimal places
+    for i, v in enumerate(scores):
+        ax.text(i, v + 1, f"{v:.2f}%", ha='center', va='bottom')
+
+    # Show the graph
+    plt.tight_layout()
+    #plt.show()
+    if title == "Department":
+        plt.savefig(f"./desktop-application/app/graphics/participation/DEP_participationbarchart.png", dpi=200)
+    else:
+        plt.savefig(f"./desktop-application/app/graphics/participation/POS_participationbarchart.png", dpi=200)
+
+    plt.cla()
+    plt.close()
+
 
 def standarddeviation(data, mean):
     sum = 0
@@ -667,6 +709,11 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
 
     generateClusterTable(deparments, hipo, companyname, clusters, departList, "DEP")
     generateClusterTable(positions, hipo, companyname, clusters, posList, "POS")
+
+print("Generating Participation Graphs")
+generateParticipationGraph(results.questionassessment.depnoscore, results.questionassessment.hiponoscore[0], results.questionassessment.overallnoscore[0], "Department")
+generateParticipationGraph(results.questionassessment.posnoscore, results.questionassessment.hiponoscore[0], results.questionassessment.overallnoscore[0], "Position")
+print("Participation Graph Complete")
 
 print("Generating Question Graphics")
 generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
