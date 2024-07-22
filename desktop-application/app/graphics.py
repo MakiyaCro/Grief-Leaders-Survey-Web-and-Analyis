@@ -526,6 +526,7 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     seg2p = str(int((seg2 / (neg+pos))*100)) + "%"
     seg3p = str(int((seg3 / (pos+neg))*100)) + "%"
     seg4p = str(int((seg4 / (pos+neg))*100)) + "%"
+    
     #seg1 = 0
     #seg2 = 0
     #seg3 = 175
