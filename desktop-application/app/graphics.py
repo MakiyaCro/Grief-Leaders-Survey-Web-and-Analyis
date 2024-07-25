@@ -74,7 +74,17 @@ def generateAllDials(categories, dial, pointer, fnt, companyname, overall):
 
     #composite will be created with the powerpoint
 
+def count_participants(csv_file):
+    with open(csv_file, 'r') as file:
+        # Skip the header row
+        next(file)
+        # Count the remaining lines
+        return sum(1 for line in file)
+
 def generateParticipationGraph(typ, hipo, overall, title):
+    
+    # Count participants
+    total_participants = overall.userTotal
     # Combine the overall object at the start of the typ array and add the hipo object at the end
     data = [overall] + typ + [hipo]
 
@@ -93,14 +103,25 @@ def generateParticipationGraph(typ, hipo, overall, title):
             colors.append('gray')
 
     # Create the bar graph
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(12, 8))
 
     ax.bar(names, scores, color=colors)
 
     # Set the title and labels
-    ax.set_title("Participation By " + title)
-    ax.set_xlabel(title)
-    ax.set_ylabel('Participation Score (%)')
+    ax.set_title(f"Participation By {title}", fontsize=16, pad=20)
+    ax.set_xlabel(title, fontsize=14)
+    ax.set_ylabel('Participation Score (%)', fontsize=14)
+
+    # Set y-axis limit to 120% to create more space at the top
+    ax.set_ylim(0, 120)
+
+    # Add total participants note
+    ax.text(0.5, 0.95, f"Total Participants: {total_participants}", 
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform=ax.transAxes,
+            fontsize=10,
+            bbox=dict(facecolor='white', edgecolor='gray', alpha=0.8))
 
     # Rotate the x-axis labels for better readability
     plt.xticks(rotation=45, ha='right')
@@ -109,9 +130,9 @@ def generateParticipationGraph(typ, hipo, overall, title):
     for i, v in enumerate(scores):
         ax.text(i, v + 1, f"{v:.2f}%", ha='center', va='bottom')
 
-    # Show the graph
+    # Adjust layout and save the graph
     plt.tight_layout()
-    #plt.show()
+
     if title == "Department":
         plt.savefig(f"./desktop-application/app/graphics/participation/DEP_participationbarchart.png", dpi=200)
     else:
@@ -119,7 +140,6 @@ def generateParticipationGraph(typ, hipo, overall, title):
 
     plt.cla()
     plt.close()
-
 
 def standarddeviation(data, mean):
     sum = 0

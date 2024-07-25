@@ -5,6 +5,7 @@ from PIL import Image
 import pandas as pd
 import os
 import graphics
+import csv
 
 imgpath = "./desktop-application/app/graphics/"
 fldrList = ['clustertables', 'dials', 'participation', 'questiongraphs', 'questiontables', 'wordchart', 'wordgraphs', 'wordtables']
@@ -55,7 +56,6 @@ def add_image_to_slide(slide, image_details, left, top, width):
     slide.shapes.add_picture(image_details.path, Inches(left), Inches(top), Inches(width))
 
 def add_table_to_slide(slide, typ, name, dialpic):
-    # Define the number of rows and columns
     df = None
     for tb in qtg:
         if typ in tb.name and name in tb.name:
@@ -63,26 +63,29 @@ def add_table_to_slide(slide, typ, name, dialpic):
             break
 
     if df is not None:
-        # Keep only the first two columns
-        df = df.iloc[:, :2]
+        # Keep all columns
+        df = df.copy()
 
-        # Add two new columns in between the remaining columns
-        df.insert(1, 'Attribute', '')
+        # Rename the first column to 'QN'
+        df.rename(columns={df.columns[0]: 'QN'}, inplace=True)
+
+        # Add new columns
+        df.insert(0, 'Attribute', '')
         df.insert(2, 'Description', '')
 
         # Populate the new columns using the CSV data
         for index, row in df.iterrows():
-            qNum_value = row.iloc[0]
+            qNum_value = row['QN']
             match_row = qfile[qfile['qNum'] == qNum_value]
             if not match_row.empty:
                 df.at[index, 'Attribute'] = match_row['qSubCat'].values[0]
                 df.at[index, 'Description'] = match_row['descript'].values[0]
 
+        # Reorder columns
+        df = df[['Attribute', 'QN', 'Description', df.columns[-1]]]
+
         # Sort the DataFrame by the 'Attribute' column alphabetically
         df = df.sort_values(by='Attribute')
-
-        #print("Updated DataFrame:")
-        #print(df)
 
         entries_per_slide = 10
 
@@ -94,19 +97,21 @@ def add_table_to_slide(slide, typ, name, dialpic):
             df_slice = df.iloc[start_row:end_row]
 
             # Define the number of rows and columns based on the slice
-            rows, cols = df_slice.shape[0] + 1, df_slice.shape[1] - 1  # +1 for the header row, -1 to ignore first column
-            left, top, width, height = Inches(1.25), Inches(1.75), Inches(9), Inches(2)  # Shifted right by 1 inch
-            table = slide.shapes.add_table(rows, cols, left, top, width, height).table  # Exclude the first column
+            rows, cols = df_slice.shape[0] + 1, df_slice.shape[1]
+            left, top, width, height = Inches(1.25), Inches(1.75), Inches(9), Inches(2)
+            table = slide.shapes.add_table(rows, cols, left, top, width, height).table
 
             # Set column widths: Adjust based on your specific needs
-            table.columns[0].width = Inches(2)
-            table.columns[1].width = Inches(8)
-            table.columns[2].width = Inches(1)
+            table.columns[0].width = Inches(1.7)     # Attribute column
+            table.columns[1].width = Inches(0.5)  # QN column
+            table.columns[2].width = Inches(8)  # Description column
+            table.columns[3].width = Inches(.75)     # %Yes column
 
-            # Set the headers, excluding the first column
+            # Set the headers
             table.cell(0, 0).text = 'Attribute'
-            table.cell(0, 1).text = 'Description'
-            table.cell(0, 2).text = '%Yes'
+            table.cell(0, 1).text = 'QN'
+            table.cell(0, 2).text = 'Description'
+            table.cell(0, 3).text = '%Yes'
 
             # Set header background color and font size
             header_fill_color = RGBColor(91, 155, 213)  # #5b9bd5
@@ -121,10 +126,10 @@ def add_table_to_slide(slide, typ, name, dialpic):
             for i in range(rows):
                 table.rows[i].height = Inches(0.4)
 
-            # Fill in the table with data from the DataFrame slice, excluding the first column
-            for row in range(1, rows):  # Start from 1 to skip the header row
-                for col in range(1, cols + 1):  # Start from 1 to skip the first column
-                    cell = table.cell(row, col - 1)  # Adjust column index to match table
+            # Fill in the table with data from the DataFrame slice
+            for row in range(1, rows):
+                for col in range(cols):
+                    cell = table.cell(row, col)
                     cell.text = str(df_slice.iloc[row - 1, col])
                     cell.fill.solid()
                     if row % 2 == 0:
@@ -138,6 +143,19 @@ def init_pres_slides(prs, pictures):
     # Add title slide
     slide = add_slide_with_title(prs, 0, "Title Place Holder")
     slide.placeholders[1].text = "Cultural Assessment Leadership Team Review"
+
+
+    for folder in pictures:
+        if folder.folder == 'participation':
+            slide = add_slide_with_title(prs, 3, f"Participation Analysis")
+            horiz = 0.5
+            for pic in folder.images:
+                tempname = pic.name.replace('.png', '')
+                typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('barchart', '')
+                add_image_to_slide(slide, pic, horiz, 1.5, 5.625)
+                horiz += 6.5
+
+    #add 
 
     # Add dial layout slides
     for folder in pictures:
@@ -155,48 +173,39 @@ def init_pres_slides(prs, pictures):
                 if pic.name in positions:
                     add_image_to_slide(slide, pic, *positions[pic.name])
 
-    for folder in pictures:
-        if folder.folder == 'participation':
-            for pic in folder.images:
-                tempname = pic.name.replace('.png', '')
-                typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('barchart', '')
-                if typ == "DEP":
-                    slide = add_slide_with_title(prs, 3, f"Department {name}")
-                else:
-                    slide = add_slide_with_title(prs, 3, f"Position {name}")
-                
-                add_image_to_slide(slide, pic, 0.5, 1.5, 5.625)
+    
 
 
     # Add question graphs slides
     for folder in pictures:
         if folder.folder == 'questiongraphs':
             for pic in folder.images:
+                
                 tempname = pic.name.replace('.png', '')
                 typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('barchart', '')
-
-                slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
-                add_image_to_slide(slide, pic, 1, 1.6, 5.5)
-
                 for dfolder in pictures:
                     if dfolder.folder == "dials":
                         for dialpic in dfolder.images:
                             if name in dialpic.name:
-                                add_image_to_slide(slide, dialpic, 11.5, 0.025, 1.5)
+                                dialpicture = dialpic
+                add_table_to_slide(slide, typ, name, dialpicture)
 
+                slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
+                add_image_to_slide(slide, pic, 2.5, 1.5, 8)
+                add_image_to_slide(slide, dialpicture, 11.5, 0.025, 1.5)
+
+
+                slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Breakout")
+                add_image_to_slide(slide, dialpicture, 11.5, 0.025, 1.5)
+            
                 for tfolder in pictures:
                     if tfolder.folder == "questiontables":
                         for tpic in tfolder.images:
                             if name in tpic.name and typ in tpic.name and 'concat' in tpic.name:
-                                add_image_to_slide(slide, tpic, 6.75, 1.7, 5.5)
+                                add_image_to_slide(slide, tpic, 2.5, 1.6, 8)
 
                 #slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
-                for dfolder in pictures:
-                    if dfolder.folder == "dials":
-                        for dialpic in dfolder.images:
-                            if name in dialpic.name:
-                                dialtemp = dialpic
-                add_table_to_slide(slide, typ, name, dialtemp)
+                
 
     # Add word graphs slides before word chart
     for folder in pictures:
