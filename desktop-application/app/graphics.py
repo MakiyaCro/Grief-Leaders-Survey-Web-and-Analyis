@@ -209,7 +209,7 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
 
     newdf.name = catigory.catigory + "_" + endding
 
-    qtg.append(newdf)
+    qtg.append(df)
 
     #print(newdf)
     #print(df)
