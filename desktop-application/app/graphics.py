@@ -441,34 +441,46 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     newchart2 = chart.copy()
 
     seg1 = 0
+    seg1T = 0
     seg1Words = []
+
     seg2 = 0
+    seg2T = 0
     seg2Words = []
+
     seg3 = 0
+    seg3T = 0
     seg3Words = []
+
     seg4 = 0
+    seg4T = 0
     seg4Words = []
 
     pos = 0
     neg = 0
 
     for word in arr:
-        if word.ident == "neg":
-            neg += 1
-            if (word.total / tUser) < .5:
-                seg1 +=1
-                seg1Words.append(word)
-            else:
-                seg2 +=1
-                seg2Words.append(word)
-        elif word.ident == "pos":
-            pos += 1
-            if (word.total / tUser) >= .5:
-                seg3 +=1
-                seg3Words.append(word)
-            else:
-                seg4 +=1
-                seg4Words.append(word)
+        if word.total > 0:
+            if word.ident == "neg":
+                neg += 1
+                if (word.total / tUser) < .5:
+                    seg1 +=1
+                    seg1T += word.total
+                    seg1Words.append(word)
+                else:
+                    seg2 +=1
+                    seg2T += word.total
+                    seg2Words.append(word)
+            elif word.ident == "pos":
+                pos += 1
+                if (word.total / tUser) >= .5:
+                    seg3 +=1
+                    seg3T += word.total
+                    seg3Words.append(word)
+                else:
+                    seg4 +=1
+                    seg4T += word.total
+                    seg4Words.append(word)
 
     seg1Words.sort(key=lambda x: x.total, reverse=True)
     seg1Words=seg1Words[:10]
@@ -542,24 +554,24 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
 
 
     #swap to numbers and remove dots
-    seg1p = str(int((seg1 / (neg+pos))*100)) + "%"
-    seg2p = str(int((seg2 / (neg+pos))*100)) + "%"
-    seg3p = str(int((seg3 / (pos+neg))*100)) + "%"
-    seg4p = str(int((seg4 / (pos+neg))*100)) + "%"
+    seg1p = str(int((seg1T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+    seg2p = str(int((seg2T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+    seg3p = str(int((seg3T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+    seg4p = str(int((seg4T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
     
     #seg1 = 0
     #seg2 = 0
     #seg3 = 175
     #seg4 = 0
-    draw.text((200,650), "Words Selected: " + str(seg1), "black", font=fnt)
-    draw.text((200,250), "Words Selected: " + str(seg2), "white", font=fnt)
-    draw.text((1100,250), "Words Selected: " + str(seg3), "white", font=fnt)
-    draw.text((1100,650), "Words Selected: " + str(seg4), "white", font=fnt)
+    draw.text((200,650), "Words Selected:           " + str(seg1), "black", font=fnt)
+    draw.text((200,250), "Words Selected:           " + str(seg2), "white", font=fnt)
+    draw.text((1100,250), "Words Selected:           " + str(seg3), "white", font=fnt)
+    draw.text((1100,650), "Words Selected:           " + str(seg4), "white", font=fnt)
 
-    draw.text((200,750), "Percentage of Total: " + seg1p, "black", font=fnt)
-    draw.text((200,350), "Percentage of Total: " + seg2p, "white", font=fnt)
-    draw.text((1100,350), "Percentage of Total: " + seg3p, "white", font=fnt)
-    draw.text((1100,750), "Percentage of Total: " + seg4p, "white", font=fnt)
+    draw.text((200,750), "Percentage of Total:    " + seg1p, "black", font=fnt)
+    draw.text((200,350), "Percentage of Total:    " + seg2p, "white", font=fnt)
+    draw.text((1100,350), "Percentage of Total:    " + seg3p, "white", font=fnt)
+    draw.text((1100,750), "Percentage of Total:    " + seg4p, "white", font=fnt)
 
     #draw.ellipse((607 - seg1, 740 - seg1, 607 + seg1, 740 + seg1), fill="blue")
     #draw.ellipse((607 - seg2, 340 - seg2, 607 + seg2, 340 + seg2), fill="blue")
