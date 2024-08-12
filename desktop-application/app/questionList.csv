@@ -62,3 +62,8 @@ qNum,qScore,qCat,qSubCat,descript
 61,-5,RFP,PurposeValues,My company should be featured on an episode of “American Greed”
 62,-5,RFP,SeekToUnderstand,I wish my company’s leaders would do an episode of “Undercover Boss” so they would know what it is really like to work here
 63,1,SrLdr,PurposeValues,The senior leadership team places metrics/achieving results above all else
+64,1,SrLdr,SeekToUnderstand,The senior leadership team “seeks first to understand” when talking with me?
+65,1,SrLdr,Compassion,The senior leadership team demonstrates the difference between “sympathy” and “empathy”?
+66,2,SrLdr,Compassion,The senior leadership team seems to care about me as a person?
+67,2,SrLdr,Courage,The senior leadership team will do what is right even if doing so brings negative consequences on themselves or the organization?
+68,2,SrLdr,Compassion,The senior leadership team cares as much about me "people" as they do themselves?

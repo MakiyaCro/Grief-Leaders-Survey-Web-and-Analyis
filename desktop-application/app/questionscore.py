@@ -239,6 +239,7 @@ def generateQuestionWeightedScore(typearr, tpscore, flag):
         for typ in typearr:
                 tweight = 0
                 for ques in typ.ques:
+                    #print(ques.qNum)
                     ques.res = (ques.yes / (ques.yes + ques.no)) * 100
                     ques.weighted = (ques.yes / (ques.yes + ques.no)) * ques.qScore
                     tweight += ques.weighted
