@@ -123,7 +123,7 @@ def userWords(userList):
     for user in userList:
         if user.score != -1:
             #remove all the yes and no questions
-            temp = user.answers[63:]
+            temp = user.answers[68:]
             temp.pop()
             user.words = [s.strip() for s in temp[0].split(',')]
 

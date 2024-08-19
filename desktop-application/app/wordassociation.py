@@ -32,8 +32,9 @@ class word:
         self.stdp = 0
 
 class cluster:
-    def __init__(self, name, words):
+    def __init__(self, name, ident, words):
         self.name = name
+        self.ident = ident
         self.words = words
         self.totalF = 0
         
@@ -108,6 +109,7 @@ def initHipo(hipoStore):
 
 def initClusters(clusterList, words, clusterImportFile):
     clusterNameList = clusterImportFile['groupname'].tolist()
+    clusterIdentList = clusterImportFile['ident'].tolist()
     wordList = clusterImportFile['words'].tolist()
 
     for i in range(len(clusterNameList)):
@@ -120,7 +122,7 @@ def initClusters(clusterList, words, clusterImportFile):
                     temp.append(word(wrd.name, wrd.ident))
                     break
 
-        clusterList.append(cluster(clusterNameList[i], temp))
+        clusterList.append(cluster(clusterNameList[i], clusterIdentList[i], temp))
 
 def addWords(deparments, positions, hipos, assessWords, wordImportFile, clusterImportFile):
     

@@ -166,11 +166,14 @@ def tableConcat(df):
         dscores.pop(0)
         dscores.pop()
         stdrd = standarddeviation(dscores, avg)
-        if stdrd <= CUTOFF:
+        """if stdrd <= CUTOFF:
             #means everyone submitted the same answer and can leave out of the report table
             flagarr.append(row[0])
         else:
-            stdarr.append(int(stdrd))
+
+            stdarr.append(int(stdrd))"""
+
+        stdarr.append(int(stdrd))
 
         
     #flagarr contains the questions that do not have high standard deviation
@@ -234,14 +237,15 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
             
         }
         
-    properties = {"border": "1px solid black", "width": "65px", "text-align": "center", "padding" : "2px 5px"}
+    properties = {"border": "1px solid black", "width": "65px", "text-align": "center", "padding" : ".5px 10px"}
 
         # Function to apply styling based on 25% of the standard deviation
     def highlight_outliers(val, mean, std_dev):
         threshold = (0.25 * std_dev) + std_dev
         #if val == 0:
         #return ''  # Ignore zero values
-        if val < mean - threshold or val > mean + threshold:
+        if val < mean - threshold:
+        #if val < mean:
             return 'background-color: yellow'
         return ''
         
@@ -262,7 +266,7 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
     style2 = newdf.style.hide(axis="index").set_properties(**properties).set_table_styles([index_names, headers]).apply(style_outliers, axis=1, exclude_last_column=True)
 
 
-    dfi.export(style, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_full.png")
+    #dfi.export(style, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_full.png")
     dfi.export(style2, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_concat.png")
 
 
@@ -382,9 +386,16 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
         def highlight_outliers(val, mean, std_dev):
             threshold = (0.25 * std_dev) + std_dev
             if val == 0:
-                return 'background-color: red'  # Ignore zero values
-            if val < mean - threshold or val > mean + threshold:
-                return 'background-color: yellow'
+                return 'background-color: darkgrey'  # Ignore zero values
+            
+            if cls.ident=='p':
+                if val < mean:
+                    return 'background-color: yellow'
+            
+            elif cls.ident=='n':
+                if val > mean:
+                    return 'background-color: yellow'
+
             return ''
         
         def style_outliers(row):
