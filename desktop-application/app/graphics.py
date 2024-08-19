@@ -28,7 +28,7 @@ mf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 100)
 sf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 50)
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
-companyname = "Example Name"
+companyname = "CompanyName"
 
 qtg = []
 
@@ -352,7 +352,7 @@ def generateQueGraph(category, typ):
         t.subcats.sort()
     allpossiblesubcats.sort()
 
-    # Sort names and vals
+     # Sort names and vals
     sorted_data = sorted(zip(vals, names))
     vals, names = zip(*sorted_data)
 
@@ -360,8 +360,8 @@ def generateQueGraph(category, typ):
     vals = [int(val) - cline for val in vals]
 
     # Set fixed y-axis range
-    y_min = -25
-    y_max = 25
+    y_min = -20
+    y_max = 20
 
     # Plotting
     fig, ax = plt.subplots(figsize=(14, 10))
@@ -370,12 +370,10 @@ def generateQueGraph(category, typ):
     bars = ax.bar(names, vals, width=0.75, color=['g' if val >= 0 else 'r' for val in vals])
     ax.grid(axis='y', linestyle='--', linewidth=0.5)
 
-    # Add value labels to the bars
+    # Add value labels at the centerline
     for i, val in enumerate(vals):
-        # Ensure the text is always within the plot area
-        y_pos = max(min(val, y_max - 2), y_min + 2)
-        va = 'bottom' if val >= 0 else 'top'
-        ax.text(i, y_pos, f"{val:+d}", ha='center', va=va, weight='bold', fontsize=10)
+        ax.text(i, 0, f"{val:+d}", ha='center', va='center', weight='bold', fontsize=10,
+                bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
 
     ax.set_xticks(range(len(names)))
     ax.set_xticklabels(names, rotation=45, ha='right', fontsize=10)
@@ -385,18 +383,23 @@ def generateQueGraph(category, typ):
     ax.set_yticks(y_ticks)
     ax.set_yticklabels([f"{y + cline}" for y in y_ticks])
 
+    # Determine all unique subcategories
+    all_subcats = sorted(set(subcat for t in typsubcats for subcat in t.subcats))
+
     # Add subcategories within the graph area only for categories below cline
     for j, (name, val) in enumerate(zip(names, vals)):
-        if val < 10:  # Check if the category is below cline
+        if val < 5:  # Check if the category is below cline
             if name == 'HiPo':
-                subcats = next((t.subcats for t in typsubcats if t.name == "hipo"), [])
+                cat_subcats = next((t.subcats for t in typsubcats if t.name == "hipo"), [])
             else:
-                subcats = next((t.subcats for t in typsubcats if t.name == name), [])
+                cat_subcats = next((t.subcats for t in typsubcats if t.name == name), [])
             
-            for i, subcat in enumerate(subcats):
+            for i, subcat in enumerate(all_subcats):
                 y_pos = y_min + 1 + i  # Start near the bottom of the graph and move up for each subcat
-                ax.text(j, y_pos, subcat, ha='center', va='center', fontsize=8, 
-                        bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
+                if subcat in cat_subcats:
+                    ax.text(j, y_pos, subcat, ha='center', va='center', fontsize=8, 
+                            bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
+                # If subcat is not in cat_subcats, we don't add any text, creating an empty space
 
     # Adjust the bottom margin
     plt.subplots_adjust(bottom=0.2)
@@ -685,127 +688,6 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     newchart.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart" + ".png", "PNG")
     newchart2.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart_Words" + ".png", "PNG")
 
-"""def generateWordGraph(arr, companyname, overall, typList, typ):
-    # Determine the centerline
-    pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
-    neg = sum(wrd.total for wrd in overall if wrd.ident == "neg")
-    cline = int(pos / (pos + neg) * 100)
-
-    # Create the data frame
-    names = [sec.name for sec in arr]
-    vals = [int(sec.pos / (sec.pos + sec.neg) * 100) for sec in arr]
-
-    # Sort names and vals in descending order of vals
-    sorted_data = sorted(zip(vals, names), reverse=True)
-    vals, names = zip(*sorted_data)
-
-    vals = [val - cline for val in vals]
-    colors = ['g' if val >= 0 else 'r' for val in vals]
-
-    # Plotting
-    plt.figure(figsize=(12, 8))
-    plt.title(f"{companyname} Word Association {typ} Summary", fontsize=16)
-    plt.xlabel(typ, fontsize=14)
-    plt.ylabel('Percentage Point Variance', fontsize=14)
-    plt.ylim(-25, 25)
-    plt.axhline(y=0, color='grey', linestyle='--', linewidth=1)
-    plt.bar(names, vals, width=.75, color=colors)
-    plt.grid(axis='y', linestyle='--', linewidth=0.5)
-
-    for i, (name, val) in enumerate(zip(names, vals)):
-        plt.text(i, val // 2, int(val), ha='center', weight='bold', fontsize=10)
-
-    plt.xticks(rotation=45, ha='right', fontsize=10)
-    plt.yticks(fontsize=10)
-    plt.tight_layout(pad=2)
-
-    end = "DEP" if typ == "Department" else "POS"
-    plt.savefig(f"./desktop-application/app/graphics/wordgraphs/{end}_WordBarchart.png", dpi=200)
-    plt.cla()
-    plt.close()
-
-    return names  # Return the names array
-
-def addWordstoWordGraph(graph, data, overall, totalP, names, fname):
-    class TempCats:
-        def __init__(self, name, avg, top, bottom):
-            self.name = name
-            self.avg = avg
-            self.top = top
-            self.bottom = bottom
-
-    pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
-    neg = sum(wrd.total for wrd in overall if wrd.ident == "neg")
-    cline = int(pos / (pos + neg) * 100)
-
-    graphList = []
-    for cat in data:
-        compareval = int(cat.pos / (cat.pos + cat.neg) * 100)
-        pwrd = sorted([w for w in cat.words if w.ident == 'pos' and w.total > 0], key=lambda x: x.total, reverse=True)[:8]
-        nwrd = sorted([w for w in cat.words if w.ident == 'neg' and w.total > 0], key=lambda x: x.total, reverse=False)[:8]
-
-        top = []
-        bottom = []
-        for w in overall:
-            for cw in pwrd:
-                if cw.name == w.name:
-                    tp = cw.total / cat.userTotal
-                    op = w.total / totalP
-                    if tp > op:
-                        top.append('<' + cw.name)
-                    elif tp < op:
-                        bottom.append('>' + cw.name)
-
-            for cw in nwrd:
-                if cw.name == w.name:
-                    tp = cw.total / cat.userTotal
-                    op = w.total / totalP
-                    if tp > op:
-                        bottom.append('>' + cw.name)
-                    elif tp < op:
-                        top.append('<' + cw.name)
-
-        graphList.append(TempCats(cat.name, compareval, top, bottom))
-
-    graph_image = Image.open(graph)
-    draw = ImageDraw.Draw(graph_image)
-    font_path = "./desktop-application/app/graphics/impact.ttf"
-    image_path = "./desktop-application/app/graphics/wordgraphs/" + fname +"_WordstoGraph.png"
-
-    try:
-        font = ImageFont.truetype(font_path, 20)
-    except IOError:
-        font = ImageFont.load_default()
-
-    bar_width = (graph_image.width - 300) / len(data)  # Adjusted for 120px left and 100px right padding
-    centerline_y = (graph_image.height / 2) - 75  # Shift centerline up by 50 pixels
-
-    # Set the text color with increased transparency (alpha value)
-    text_color = (0, 0, 0, 255)  # RGBA (Black with 25% transparency)
-
-    for cat in graphList:
-        try:
-            idx = names.index(cat.name)
-        except ValueError:
-            continue
-
-        bar_x = 150 + idx * bar_width + (bar_width / 2)
-        top_words = "\n".join(cat.top)
-        bottom_words = "\n".join(cat.bottom)
-
-        # Adjust vertical spacing
-        vertical_gap = 25
-        bottom_gap = 100
-        top_y = centerline_y - (len(cat.top) * vertical_gap)
-        bottom_y = centerline_y + bottom_gap
-
-        # Draw the category name at the centerline
-        #draw.text((bar_x, centerline_y), cat.name, fill=text_color, font=font, anchor="ms")
-        draw.text((bar_x, top_y), top_words, fill=text_color, font=font, anchor="ms")
-        draw.text((bar_x, bottom_y), bottom_words, fill=text_color, font=font, anchor="ms")
-
-    graph_image.save(image_path)"""
-
 def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
     # Calculate the centerline based on overall positive and negative totals
     pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
@@ -829,22 +711,25 @@ def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
     fig, ax = plt.subplots(figsize=(20, 16))
     ax.set_title(f"{companyname} Word Association {typ} Summary", fontsize=16)
     ax.set_xlabel(typ, fontsize=14)
-    ax.set_ylabel('Percentage Point Variance', fontsize=14)
-    ax.set_ylim(-25, 25)  # Set y-axis limits
+    ax.set_ylabel('Percentage Point Variance from Average', fontsize=14)
+    ax.set_ylim(-25, 25)  # Set y-axis limits to +/- 25
     ax.axhline(y=0, color='grey', linestyle='--', linewidth=1)  # Add centerline
     bars = ax.bar(names, vals, width=0.75, color=colors)  # Create bar chart
     ax.grid(axis='y', linestyle='--', linewidth=0.5)  # Add horizontal grid lines
 
-    # Add value labels to each bar
+    # Add value labels at the centerline
     for i, val in enumerate(vals):
-        ax.text(i, val // 2, int(val), ha='center', va='center', weight='bold', fontsize=10)
+        ax.text(i, 0, f"{val:+d}", ha='center', va='center', weight='bold', fontsize=10,
+                bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
 
     # Set x-axis labels
     ax.set_xticks(range(len(names)))
     ax.set_xticklabels(names, rotation=45, ha='right', fontsize=10)
-    # Set y-axis labels
-    ax.set_yticks(range(-25, 26, 5))
-    ax.set_yticklabels([str(abs(i)) for i in range(-25, 26, 5)], fontsize=10)
+    
+    # Set y-axis labels to show actual percentages
+    y_ticks = range(-25, 26, 5)
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels([f"{y + cline}" for y in y_ticks], fontsize=10)
 
     # Process and add words to the graph
     for i, (cat, _) in enumerate(sorted_data):
@@ -888,8 +773,6 @@ def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
             y_pos = max(bar_height, 0) + 1 + j * 1.2  # Calculate position
             
             # Add text to the plot
-            # To adjust size: change fontsize value (e.g., 10 for larger, 6 for smaller)
-            # To adjust boldness: change weight value ('normal', 'bold', 'heavy', etc.)
             ax.text(i, y_pos, word, ha='center', va='bottom', fontsize=10, weight='bold',
                     bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
 
@@ -898,8 +781,6 @@ def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
             y_pos = min(bar_height, 0) - 1 - j * 1.2  # Calculate position
             
             # Add text to the plot
-            # To adjust size: change fontsize value (e.g., 10 for larger, 6 for smaller)
-            # To adjust boldness: change weight value ('normal', 'bold', 'heavy', etc.)
             ax.text(i, y_pos, word, ha='center', va='top', fontsize=10, weight='bold',
                     bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
 

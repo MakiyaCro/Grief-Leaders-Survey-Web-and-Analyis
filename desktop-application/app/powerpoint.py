@@ -15,6 +15,7 @@ qfile = pd.read_csv("./desktop-application/app/questionList.csv")
 
 pictures = []
 qtg = graphics.qtg
+companyname = graphics.companyname
 
 class PresentationDetails:
     def __init__(self, title, date):
@@ -173,7 +174,7 @@ def init_pres_slides(prs, pictures):
             for pic in folder.images:
                 positions = {
                     "OVERALL_RFP.png": (2.9, 2, 2.25),
-                    "OVERALL_Ranch.png": (5.25, 1.6, 3),
+                    "OVERALL_"+ companyname +".png": (5.25, 1.6, 3),
                     "OVERALL_EPS.png": (8.35, 2, 2.25),
                     "OVERALL_CM.png": (3.25, 4.35, 2.25),
                     "OVERALL_SrLdr.png": (5.62, 4.65, 2.25),
@@ -220,12 +221,12 @@ def init_pres_slides(prs, pictures):
     for folder in pictures:
         if folder.folder == 'wordgraphs':
             for pic in folder.images:
-                if pic.name == 'DEP_WordstoGraph.png':
+                if pic.name == 'DEP_WordBarchart.png':
                     slide = add_slide_with_title(prs, 3, "Department WordstoGraph")
-                    add_image_to_slide(slide, pic, 2.5, 1.5, 8)
-                elif pic.name == 'POS_WordstoGraph.png':
+                    add_image_to_slide(slide, pic, 2.5, 1.5, 7.5)
+                elif pic.name == 'POS_WordBarchart.png':
                     slide = add_slide_with_title(prs, 3, "Position WordstoGraph")
-                    add_image_to_slide(slide, pic, 2.5, 1.5, 8)
+                    add_image_to_slide(slide, pic, 2.5, 1.5, 7.5)
 
     # Add word chart and word chart words slides side by side
     wordchart_pairs = {}
