@@ -281,53 +281,132 @@ def generateQueGraph(category, typ):
     # Create the data frame
     names = []
     vals = []
+    typsubcats = []
+    allpossiblesubcats = []
     cline = int(category.pscore)
+
+    class addwords:
+        def __init__(self, name):
+            self.name = name
+            self.subcats = []
+            self.qNums = []
 
     if typ == "DEP":
         plt.title(f"{category.catigory} Department Analysis", fontsize=16)
         plt.xlabel('Department', fontsize=14)
         plt.ylabel('Score', fontsize=14)
         for dep in category.departments:
+            qnumTemp = []
             names.append(dep.name)
             vals.append(int(dep.pscore))
+            typsubcats.append(addwords(dep.name))
+            for q in dep.ques:
+                if q.res < cline:
+                    qnumTemp.append(q.qNum)
+            
+            for d in typsubcats:
+                if d.name == dep.name:
+                    d.qNums = qnumTemp
 
     elif typ == "POS":
         plt.title(f"{category.catigory} Position Analysis", fontsize=16)
         plt.xlabel('Position', fontsize=14)
         plt.ylabel('Score', fontsize=14)
         for pos in category.positions:
+            qnumTemp = []
             names.append(pos.name)
             vals.append(int(pos.pscore))
+            typsubcats.append(addwords(pos.name))
+            for q in pos.ques:
+                if q.res < cline:
+                    qnumTemp.append(q.qNum)
+            
+            for p in typsubcats:
+                if p.name == pos.name:
+                    p.qNums = qnumTemp
 
     names.append('HiPo')
     vals.append(category.hipo.pscore)
+    qnumTemp = []
+    typsubcats.append(addwords("hipo"))
+    for q in category.hipo.ques:
+        if q.res < cline:
+            qnumTemp.append(q.qNum)
+    
+    for t in typsubcats:
+        if t.name == "hipo":
+            t.qNums = qnumTemp
+            break
+
+    for q in results.questionassessment.quesList:
+        if q.qCat == category.catigory and q.qSubCat not in allpossiblesubcats:
+            allpossiblesubcats.append(q.qSubCat)
+
+    for t in typsubcats:
+        for ques in t.qNums:
+            for q in results.questionassessment.quesList:
+                if ques == q.qNum and q.qSubCat not in t.subcats:
+                    t.subcats.append(q.qSubCat)
+                    break
+        
+        t.subcats.sort()
+    allpossiblesubcats.sort()
 
     # Sort names and vals
     sorted_data = sorted(zip(vals, names))
     vals, names = zip(*sorted_data)
 
-    vals = [val - cline for val in vals]
-    colors = ['g' if val >= 0 else 'r' for val in vals]
+    # Calculate values relative to cline
+    vals = [int(val) - cline for val in vals]
+
+    # Set fixed y-axis range
+    y_min = -25
+    y_max = 25
 
     # Plotting
-    plt.figure(figsize=(12, 8))
-    plt.ylim(-25, 25)
-    plt.axhline(y=0, color='grey', linestyle='--', linewidth=1)
-    plt.bar(names, vals, width=0.75, color=colors)
-    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+    fig, ax = plt.subplots(figsize=(14, 10))
+    ax.set_ylim(y_min, y_max)
+    ax.axhline(y=0, color='grey', linestyle='--', linewidth=1)  # This line represents the cline
+    bars = ax.bar(names, vals, width=0.75, color=['g' if val >= 0 else 'r' for val in vals])
+    ax.grid(axis='y', linestyle='--', linewidth=0.5)
 
-    for i, (name, val) in enumerate(zip(names, vals)):
-        plt.text(i, val // 2, int(val), ha='center', weight='bold', fontsize=10)
+    # Add value labels to the bars
+    for i, val in enumerate(vals):
+        # Ensure the text is always within the plot area
+        y_pos = max(min(val, y_max - 2), y_min + 2)
+        va = 'bottom' if val >= 0 else 'top'
+        ax.text(i, y_pos, f"{val:+d}", ha='center', va=va, weight='bold', fontsize=10)
 
-    plt.xticks(rotation=45, ha='right', fontsize=10)
-    plt.yticks(fontsize=10)
-    plt.tight_layout(pad=2)
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=45, ha='right', fontsize=10)
+
+    # Adjust y-axis ticks and labels
+    y_ticks = range(y_min, y_max + 1, 5)
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels([f"{y + cline}" for y in y_ticks])
+
+    # Add subcategories within the graph area only for categories below cline
+    for j, (name, val) in enumerate(zip(names, vals)):
+        if val < 10:  # Check if the category is below cline
+            if name == 'HiPo':
+                subcats = next((t.subcats for t in typsubcats if t.name == "hipo"), [])
+            else:
+                subcats = next((t.subcats for t in typsubcats if t.name == name), [])
+            
+            for i, subcat in enumerate(subcats):
+                y_pos = y_min + 1 + i  # Start near the bottom of the graph and move up for each subcat
+                ax.text(j, y_pos, subcat, ha='center', va='center', fontsize=8, 
+                        bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
+
+    # Adjust the bottom margin
     plt.subplots_adjust(bottom=0.2)
 
-    plt.savefig(f"./desktop-application/app/graphics/questiongraphs/{typ}_{category.catigory}barchart.png", dpi=200)
+    plt.tight_layout(pad=2)
+    plt.savefig(f"./desktop-application/app/graphics/questiongraphs/{typ}_{category.catigory}barchart.png", dpi=200, bbox_inches='tight')
     plt.cla()
     plt.close()
 
+    
 def generateQuestionDataHub(categories, companyname, departList, positionList):
     for cat in categories:
         generateQuestionTable(cat, cat.departments, companyname, departList, "DEP")
@@ -606,7 +685,7 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
     newchart.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart" + ".png", "PNG")
     newchart2.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart_Words" + ".png", "PNG")
 
-def generateWordGraph(arr, companyname, overall, typList, typ):
+"""def generateWordGraph(arr, companyname, overall, typList, typ):
     # Determine the centerline
     pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
     neg = sum(wrd.total for wrd in overall if wrd.ident == "neg")
@@ -725,7 +804,112 @@ def addWordstoWordGraph(graph, data, overall, totalP, names, fname):
         draw.text((bar_x, top_y), top_words, fill=text_color, font=font, anchor="ms")
         draw.text((bar_x, bottom_y), bottom_words, fill=text_color, font=font, anchor="ms")
 
-    graph_image.save(image_path)
+    graph_image.save(image_path)"""
+
+def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
+    # Calculate the centerline based on overall positive and negative totals
+    pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
+    neg = sum(wrd.total for wrd in overall if wrd.ident == "neg")
+    cline = int(pos / (pos + neg) * 100)
+
+    # Create and sort the data
+    data = [(sec, int(sec.pos / (sec.pos + sec.neg) * 100)) for sec in arr]
+    sorted_data = sorted(data, key=lambda x: x[1], reverse=True)
+    
+    # Extract names and values from sorted data
+    names = [sec.name for sec, _ in sorted_data]
+    vals = [val for _, val in sorted_data]
+
+    # Adjust values relative to the centerline
+    vals = [val - cline for val in vals]
+    # Determine colors based on positive or negative values
+    colors = ['g' if val >= 0 else 'r' for val in vals]
+
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(20, 16))
+    ax.set_title(f"{companyname} Word Association {typ} Summary", fontsize=16)
+    ax.set_xlabel(typ, fontsize=14)
+    ax.set_ylabel('Percentage Point Variance', fontsize=14)
+    ax.set_ylim(-25, 25)  # Set y-axis limits
+    ax.axhline(y=0, color='grey', linestyle='--', linewidth=1)  # Add centerline
+    bars = ax.bar(names, vals, width=0.75, color=colors)  # Create bar chart
+    ax.grid(axis='y', linestyle='--', linewidth=0.5)  # Add horizontal grid lines
+
+    # Add value labels to each bar
+    for i, val in enumerate(vals):
+        ax.text(i, val // 2, int(val), ha='center', va='center', weight='bold', fontsize=10)
+
+    # Set x-axis labels
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=45, ha='right', fontsize=10)
+    # Set y-axis labels
+    ax.set_yticks(range(-25, 26, 5))
+    ax.set_yticklabels([str(abs(i)) for i in range(-25, 26, 5)], fontsize=10)
+
+    # Process and add words to the graph
+    for i, (cat, _) in enumerate(sorted_data):
+        # Get top 10 positive and negative words
+        pwrd = sorted([w for w in cat.words if w.ident == 'pos' and w.total > 0], key=lambda x: x.total, reverse=True)[:10]
+        nwrd = sorted([w for w in cat.words if w.ident == 'neg' and w.total > 0], key=lambda x: x.total, reverse=False)[:10]
+
+        top = []
+        bottom = []
+        # Compare category words with overall words
+        for w in overall:
+            for cw in pwrd:
+                if cw.name == w.name:
+                    tp = cw.total / cat.userTotal
+                    op = w.total / totalP
+                    if tp > op:
+                        top.append('<' + cw.name)
+                    elif tp < op:
+                        bottom.append('>' + cw.name)
+                    break
+
+            for cw in nwrd:
+                if cw.name == w.name:
+                    tp = cw.total / cat.userTotal
+                    op = w.total / totalP
+                    if tp > op:
+                        bottom.append('<' + cw.name)
+                    elif tp < op:
+                        top.append('>' + cw.name)
+                    break
+
+        # Limit to 10 words on each side
+        top = top[:10]
+        bottom = bottom[:10]
+
+        # Get the height of the current bar
+        bar_height = vals[i]
+
+        # Add words above the bar or centerline
+        for j, word in enumerate(top):
+            y_pos = max(bar_height, 0) + 1 + j * 1.2  # Calculate position
+            
+            # Add text to the plot
+            # To adjust size: change fontsize value (e.g., 10 for larger, 6 for smaller)
+            # To adjust boldness: change weight value ('normal', 'bold', 'heavy', etc.)
+            ax.text(i, y_pos, word, ha='center', va='bottom', fontsize=10, weight='bold',
+                    bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
+
+        # Add words below the bar or centerline
+        for j, word in enumerate(bottom):
+            y_pos = min(bar_height, 0) - 1 - j * 1.2  # Calculate position
+            
+            # Add text to the plot
+            # To adjust size: change fontsize value (e.g., 10 for larger, 6 for smaller)
+            # To adjust boldness: change weight value ('normal', 'bold', 'heavy', etc.)
+            ax.text(i, y_pos, word, ha='center', va='top', fontsize=10, weight='bold',
+                    bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
+
+    # Adjust layout and save the figure
+    plt.tight_layout(pad=2)
+    
+    # Determine file name based on type
+    end = "DEP" if typ == "Department" else "POS"
+    plt.savefig(f"./desktop-application/app/graphics/wordgraphs/{end}_WordBarchart.png", dpi=200, bbox_inches='tight')
+    plt.close()  # Close the plot to free up memory
         
 def generateWordGraphicHub(overall, departments, positions, departList, positionList, hipo, tUsers, chart, fnt):
     #use bubbles in each quadrent possibly percentage in each bubble, tyarget is max size pos in upper left
@@ -741,10 +925,12 @@ def generateWordGraphicHub(overall, departments, positions, departList, position
     for pos in positions:
         generateWordGraphic(pos.words, pos.name, pos.userTotal, chart, fnt)
 
-    dnames = generateWordGraph(departments, companyname, overall, departList , "Department" )
-    addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", departments, overall, tUsers, dnames, "DEP")
-    pnames =generateWordGraph(positions, companyname, overall, positionList , "Position" )
-    addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/POS_WordBarchart.png", positions, overall, tUsers, pnames, "POS")
+    generateWordGraph(departments, companyname, overall, departList, "Department", tUsers)
+    generateWordGraph(positions, companyname, overall, positionList, "Position", tUsers)
+    #dnames = generateWordGraph(departments, companyname, overall, departList , "Department" )
+    #addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", departments, overall, tUsers, dnames, "DEP")
+    #pnames =generateWordGraph(positions, companyname, overall, positionList , "Position" )
+    #addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/POS_WordBarchart.png", positions, overall, tUsers, pnames, "POS")
 
 def generateWordDataHub(deparments, positions, hipo, companyname, overall, clusters, departList, posList):
     
