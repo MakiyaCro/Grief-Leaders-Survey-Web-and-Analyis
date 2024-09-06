@@ -18,6 +18,7 @@ import pythoncom
 import users
 import questions
 from tqdm import tqdm
+import time
 
 from PIL import Image, ImageFont, ImageDraw
 import io
@@ -41,6 +42,15 @@ class word:
         #used for overall only
         self.stdd = 0
         self.stdp = 0
+
+class cluster:
+    def __init__(self, name, ident, words):
+        self.name = name
+        self.ident = ident
+        self.words = words
+        self.totalF = 0
+        
+        self.flag = False
 
 @lru_cache(maxsize=1)
 def get_template():
@@ -89,8 +99,9 @@ def generateQuestionWeightedScore(userQuestions):
     for ques in questions.qList:
         for c in scores:
             if ques.qCat == c.name:
-                c.totalPossibleScore += ques.qScore
-                totalpossible += ques.qScore
+                if ques.qScore > 0:
+                    c.totalPossibleScore += ques.qScore
+                    totalpossible += ques.qScore
 
                 if userQuestions[ques.qNum-1] == "Yes":
                     c.weightedScore += ques.qScore
@@ -320,7 +331,33 @@ def element_has_content(element):
         return any(cell.text.strip() for row in element.rows for cell in row.cells)
     return False
 
+def initClusters(clusterList, words, clusterImportFile):
+    clusterNameList = clusterImportFile['groupname'].tolist()
+    clusterIdentList = clusterImportFile['ident'].tolist()
+    wordList = clusterImportFile['words'].tolist()
+
+    for i in range(len(clusterNameList)):
+        clusterWords = [s.strip() for s in wordList[i].split(',')]
+        temp = []
+        for j in range(len(clusterWords)):
+            tword = clusterWords[j]
+            for wrd in words:
+                if wrd.name == tword:
+                    temp.append(word(wrd.name, wrd.ident))
+                    break
+
+        clusterList.append(cluster(clusterNameList[i], clusterIdentList[i], temp))
+
+def processClusters(clusters, userwords):
+    for words in userwords:
+        for cls in clusters:
+            for w in cls.words:
+                if w.name == words:
+                    cls.totalF += 1
+                    
+
 def generate_individual_report(user):
+    clusterList = []
     doc = get_template()
     initWords(wordList, wordImportFile)
     
@@ -381,6 +418,21 @@ def generate_individual_report(user):
     run.add_break(WD_BREAK.PAGE)
 
     # TODO: Add code to populate Word Association Results and Pattern Analysis table
+    improvement_table = doc.tables[1]
+
+    initClusters(clusterList, wordList, clusterImportFile)
+    processClusters(clusterList, user.words)
+
+    # Populate scores
+    for i, clusters in enumerate(clusterList, start=1):
+        cell = improvement_table.cell(i, 1)
+        percentage = (clusters.totalF  / len(clusters.words)) * 100
+        if clusters.ident == "n":
+            percentage = 100 - percentage
+        c = get_color_hex(percentage)
+        set_cell_color(cell, c)
+
+
     remove_empty_end_pages(doc)
     
     # Create the reports directory if it doesn't exist
@@ -426,7 +478,7 @@ def generate_report_wrapper(user):
         print(f"Error generating report for {user.email}: {str(e)}")
         return None
 
-def generate_reports_batch(users, batch_size=10):
+def generate_reports_batch(users, batch_size=5):
     total_users = len(users)
     with tqdm(total=total_users, desc="Generating Reports", unit="report") as pbar:
         for i in range(0, total_users, batch_size):
@@ -439,12 +491,13 @@ def generate_reports_batch(users, batch_size=10):
             
             # Filter out None results (failed report generations)
             successful_reports = [r for r in results if r is not None]
-            print(f"Successfully generated {len(successful_reports)} reports in this batch")
+            #print(f"Successfully generated {len(successful_reports)} reports in this batch")
+            time.sleep(1)
 
 def generate_all_reports():
     users_with_scores = [user for user in users.userList if user.score != -1]
     generate_reports_batch(users_with_scores)
-    print(f"Attempted to generate reports for {len(users_with_scores)} users")
+    #print(f"Attempted to generate reports for {len(users_with_scores)} users")
 
 if __name__ == "__main__":
     generate_all_reports()
