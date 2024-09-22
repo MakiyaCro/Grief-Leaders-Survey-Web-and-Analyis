@@ -6,11 +6,14 @@ import numpy as np
 #from pylab import title, figure, xlabel, ylabel, xticks, bar, legend, axis, savefig, show, cla
 
 from PIL import Image, ImageFont, ImageDraw
-
+import logging
+import subprocess
 
 import questionscore
 import wordassociation
 
+
+#logging.basicConfig(level=logging.DEBUG)
 #Constant Percentage for standard deviation
 CUTOFF = 15
 
@@ -26,9 +29,12 @@ dial = Image.open("./desktop-application/app/graphics/dial.png")
 #mf = ImageFont.truetype("./desktop-application/app/graphics/Nasa21-l23X.ttf", 100)
 mf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 100)
 sf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 50)
+xsf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 75)
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
-companyname = "CompanyName"
+companyname = "Liberty University"
+
+
 
 qtg = []
 
@@ -45,13 +51,26 @@ def generateDataframe(typ, array, companyname):
 
 def generateDial(dial, pointer, fnt, label, percent):
     width = 900
+    templabel = ""
+    if label == "RFP":
+        templabel = "Respect For People"
+    elif label == "CM":
+        templabel = "Change Management"
+    elif label == "EPS":
+        templabel = "Emotional Wellbeing"
+    elif label == "LdrSpv":
+        templabel = "Leadership Supervisor"
+    elif label == "SrLdr":
+        templabel = "Senior Leaders"
+    else:
+        templabel = label
 
     ptext = str(int(percent))
     dialtext = ImageDraw.Draw(dial)
     #w, h = fnt.getsize(label)
 
-    dialtext.text((width/ 2,630), label, (211,211,211), font=fnt, anchor="mm")
-    dialtext.text((400,690), ptext, (0,0,0), font=fnt)
+    dialtext.text((width/ 2,630), templabel, (211,211,211), font=fnt, anchor="mm")
+    dialtext.text((410,700), ptext, (0,0,0), font=fnt)
 
     rval = -1 * (-130 + (260 * (percent / 100)))
     #rval = 130
@@ -85,10 +104,13 @@ def generateParticipationGraph(typ, hipo, overall, title):
     
     # Count participants
     total_participants = overall.userTotal
-    # Combine the overall object at the start of the typ array and add the hipo object at the end
-    data = [overall] + typ + [hipo]
+    if hipo.userTotal > 0:
+        # Combine the overall object at the start of the typ array and add the hipo object at the end
+        data = [overall] + typ + [hipo]
+    else:
+        data = [overall] + typ
 
-    # Extract the names and participation scores
+        # Extract the names and participation scores
     names = [obj.name for obj in data]
     scores = [obj.participationScore for obj in data]
 
@@ -164,7 +186,8 @@ def tableConcat(df):
         #remove the index, average, and hipo
         dscores.pop(0)
         dscores.pop(0)
-        dscores.pop()
+        if 'Hipo' in temp.columns:
+            dscores.pop()
         stdrd = standarddeviation(dscores, avg)
         """if stdrd <= CUTOFF:
             #means everyone submitted the same answer and can leave out of the report table
@@ -207,8 +230,16 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
         #print(tempArr)0
         df.loc[len(df)] = tempArr
 
+    if catigory.hipo.pscore == -1000:
+        del df["Hipo"]
     # concatinate based off of standard deviation
     newdf = tableConcat(df)
+
+    def all_same(items):
+        return all(x == items[0] for x in items)
+
+    if all_same(df["STD"]):
+        del df["STD"]
 
     newdf.name = catigory.catigory + "_" + endding
 
@@ -266,8 +297,16 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
     style2 = newdf.style.hide(axis="index").set_properties(**properties).set_table_styles([index_names, headers]).apply(style_outliers, axis=1, exclude_last_column=True)
 
 
-    #dfi.export(style, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_full.png")
     dfi.export(style2, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_concat.png")
+    #dfi.export(style, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_full.png")
+    """try:
+        dfi.export(style2, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_concat.png")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Chrome process failed with exit code {e.returncode}")
+        logging.error(f"Command: {e.cmd}")
+        logging.error(f"Output: {e.output}")
+    # Handle the error gracefully or re-raise if needed
+    raise"""
 
 
 
@@ -283,7 +322,11 @@ def generateQueGraph(category, typ):
     vals = []
     typsubcats = []
     allpossiblesubcats = []
-    cline = int(category.pscore)
+    
+    if len(category.positions) == 1 and len(category.departments) == 1:
+        cline = 50
+    else:
+        cline = int(category.pscore)
 
     class addwords:
         def __init__(self, name):
@@ -324,19 +367,19 @@ def generateQueGraph(category, typ):
             for p in typsubcats:
                 if p.name == pos.name:
                     p.qNums = qnumTemp
-
-    names.append('HiPo')
-    vals.append(category.hipo.pscore)
-    qnumTemp = []
-    typsubcats.append(addwords("hipo"))
-    for q in category.hipo.ques:
-        if q.res < cline:
-            qnumTemp.append(q.qNum)
+    if category.hipo.pscore != -1000:
+        names.append('HiPo')
+        vals.append(category.hipo.pscore)
+        qnumTemp = []
+        typsubcats.append(addwords("hipo"))
+        for q in category.hipo.ques:
+            if q.res < cline:
+                qnumTemp.append(q.qNum)
     
-    for t in typsubcats:
-        if t.name == "hipo":
-            t.qNums = qnumTemp
-            break
+        for t in typsubcats:
+            if t.name == "hipo":
+                t.qNums = qnumTemp
+                break
 
     for q in results.questionassessment.quesList:
         if q.qCat == category.catigory and q.qSubCat not in allpossiblesubcats:
@@ -446,6 +489,8 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
 
             df.loc[len(df)] = tempArr
         
+        if hipo[0].userTotal == 0:
+            del df["Hipo"]
         #blankIndex = ['']*len(df)
         #df.index=blankIndex
 
@@ -530,169 +575,176 @@ def generateWordTable(arr, hipo, companyname, overall, typList, typ):
     del df
 
 def generateWordGraphic(arr, name, tUser, chart, fnt):
-    newchart = chart.copy()
-    newchart2 = chart.copy()
+    try:
+        newchart = chart.copy()
+        newchart2 = chart.copy()
 
-    seg1 = 0
-    seg1T = 0
-    seg1Words = []
+        seg1 = 0
+        seg1T = 0
+        seg1Words = []
 
-    seg2 = 0
-    seg2T = 0
-    seg2Words = []
+        seg2 = 0
+        seg2T = 0
+        seg2Words = []
 
-    seg3 = 0
-    seg3T = 0
-    seg3Words = []
+        seg3 = 0
+        seg3T = 0
+        seg3Words = []
 
-    seg4 = 0
-    seg4T = 0
-    seg4Words = []
+        seg4 = 0
+        seg4T = 0
+        seg4Words = []
 
-    pos = 0
-    neg = 0
+        pos = 0
+        neg = 0
 
-    for word in arr:
-        if word.total > 0:
-            if word.ident == "neg":
-                neg += 1
-                if (word.total / tUser) < .5:
-                    seg1 +=1
-                    seg1T += word.total
-                    seg1Words.append(word)
-                else:
-                    seg2 +=1
-                    seg2T += word.total
-                    seg2Words.append(word)
-            elif word.ident == "pos":
-                pos += 1
-                if (word.total / tUser) >= .5:
-                    seg3 +=1
-                    seg3T += word.total
-                    seg3Words.append(word)
-                else:
-                    seg4 +=1
-                    seg4T += word.total
-                    seg4Words.append(word)
+        for word in arr:
+            if word.total > 0:
+                if word.ident == "neg":
+                    neg += 1
+                    if (word.total / tUser) < .5:
+                        seg1 +=1
+                        seg1T += word.total
+                        seg1Words.append(word)
+                    else:
+                        seg2 +=1
+                        seg2T += word.total
+                        seg2Words.append(word)
+                elif word.ident == "pos":
+                    pos += 1
+                    if (word.total / tUser) >= .5:
+                        seg3 +=1
+                        seg3T += word.total
+                        seg3Words.append(word)
+                    else:
+                        seg4 +=1
+                        seg4T += word.total
+                        seg4Words.append(word)
 
-    seg1Words.sort(key=lambda x: x.total, reverse=True)
-    seg1Words=seg1Words[:10]
-    seg2Words.sort(key=lambda x: x.total, reverse=True)
-    seg2Words=seg2Words[:10]
-    seg3Words.sort(key=lambda x: x.total, reverse=True)
-    seg3Words=seg3Words[:10]
-    seg4Words.sort(key=lambda x: x.total, reverse=True)
-    seg4Words=seg4Words[:10]
+        seg1Words.sort(key=lambda x: x.total, reverse=True)
+        seg1Words=seg1Words[:10]
+        seg2Words.sort(key=lambda x: x.total, reverse=True)
+        seg2Words=seg2Words[:10]
+        seg3Words.sort(key=lambda x: x.total, reverse=True)
+        seg3Words=seg3Words[:10]
+        seg4Words.sort(key=lambda x: x.total, reverse=True)
+        seg4Words=seg4Words[:10]
 
-    #have totals for all words
-    draw = ImageDraw.Draw(newchart)
+        #have totals for all words
+        draw = ImageDraw.Draw(newchart)
 
-    draw2 = ImageDraw.Draw(newchart2)
+        draw2 = ImageDraw.Draw(newchart2)
 
-    counter = 1
-    x = 200
-    y = 650
-    for i in seg1Words:
-        draw2.text((x,y),i.name, "black", font=fnt)
-        counter+=1
-        y += 50
-        if counter == 6:
-            y = 650
-        if counter > 5:
-            x = 600
+        counter = 1
+        x = 200
+        y = 650
+        for i in seg1Words:
+            draw2.text((x,y),i.name, "black", font=fnt)
+            counter+=1
+            y += 50
+            if counter == 6:
+                y = 650
+            if counter > 5:
+                x = 600
 
-    counter = 1
-    x = 200
-    y = 250
-    for i in seg2Words:
-        draw2.text((x,y),i.name, "white", font=fnt)
-        counter+=1
-        y += 50
-        if counter == 6:
-            y = 250
-        if counter > 5:
-            x = 600
+        counter = 1
+        x = 200
+        y = 250
+        for i in seg2Words:
+            draw2.text((x,y),i.name, "white", font=fnt)
+            counter+=1
+            y += 50
+            if counter == 6:
+                y = 250
+            if counter > 5:
+                x = 600
 
-    counter = 1
-    x = 1100
-    y = 250
-    for i in seg3Words:
-        draw2.text((x,y),i.name, "white", font=fnt)
-        counter+=1
-        y += 50
-        if counter == 6:
-            y = 250
-        if counter > 5:
-            x = 1500
+        counter = 1
+        x = 1100
+        y = 250
+        for i in seg3Words:
+            draw2.text((x,y),i.name, "white", font=fnt)
+            counter+=1
+            y += 50
+            if counter == 6:
+                y = 250
+            if counter > 5:
+                x = 1500
 
-    counter = 1
-    x = 1100
-    y = 650
-    for i in seg4Words:
-        draw2.text((x,y),i.name, "white", font=fnt)
-        counter+=1
-        y += 50
-        if counter == 6:
-            y = 650
-        if counter > 5:
-            x = 1500
+        counter = 1
+        x = 1100
+        y = 650
+        for i in seg4Words:
+            draw2.text((x,y),i.name, "white", font=fnt)
+            counter+=1
+            y += 50
+            if counter == 6:
+                y = 650
+            if counter > 5:
+                x = 1500
         
-    #x0, y0, x1, y1
-    #center points for segments
-    #seg1 - x607 y740
-    #seg2 - x607 y340
-    #seg3 - x1482 y340
-    #seg4 - x1482 y740
-    #set multiplier to make cirlces bigger x10
+        #x0, y0, x1, y1
+        #center points for segments
+        #seg1 - x607 y740
+        #seg2 - x607 y340
+        #seg3 - x1482 y340
+        #seg4 - x1482 y740
+        #set multiplier to make cirlces bigger x10
 
 
-    #swap to numbers and remove dots
-    seg1p = str(int((seg1T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
-    seg2p = str(int((seg2T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
-    seg3p = str(int((seg3T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
-    seg4p = str(int((seg4T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+        #swap to numbers and remove dots
+        seg1p = str(int((seg1T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+        seg2p = str(int((seg2T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+        seg3p = str(int((seg3T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+        seg4p = str(int((seg4T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
     
-    #seg1 = 0
-    #seg2 = 0
-    #seg3 = 175
-    #seg4 = 0
-    draw.text((200,650), "Words Selected:           " + str(seg1), "black", font=fnt)
-    draw.text((200,250), "Words Selected:           " + str(seg2), "white", font=fnt)
-    draw.text((1100,250), "Words Selected:           " + str(seg3), "white", font=fnt)
-    draw.text((1100,650), "Words Selected:           " + str(seg4), "white", font=fnt)
+        #seg1 = 0
+        #seg2 = 0
+        #seg3 = 175
+        #seg4 = 0
+        draw.text((200,650), "Words Selected:           " + str(seg1), "black", font=fnt)
+        draw.text((200,250), "Words Selected:           " + str(seg2), "white", font=fnt)
+        draw.text((1100,250), "Words Selected:           " + str(seg3), "white", font=fnt)
+        draw.text((1100,650), "Words Selected:           " + str(seg4), "white", font=fnt)
 
-    draw.text((200,750), "Percentage of Total:    " + seg1p, "black", font=fnt)
-    draw.text((200,350), "Percentage of Total:    " + seg2p, "white", font=fnt)
-    draw.text((1100,350), "Percentage of Total:    " + seg3p, "white", font=fnt)
-    draw.text((1100,750), "Percentage of Total:    " + seg4p, "white", font=fnt)
+        draw.text((200,750), "Percentage of Total:    " + seg1p, "black", font=fnt)
+        draw.text((200,350), "Percentage of Total:    " + seg2p, "white", font=fnt)
+        draw.text((1100,350), "Percentage of Total:    " + seg3p, "white", font=fnt)
+        draw.text((1100,750), "Percentage of Total:    " + seg4p, "white", font=fnt)
 
-    #draw.ellipse((607 - seg1, 740 - seg1, 607 + seg1, 740 + seg1), fill="blue")
-    #draw.ellipse((607 - seg2, 340 - seg2, 607 + seg2, 340 + seg2), fill="blue")
-    #draw.ellipse((1482 - seg3, 340 - seg3, 1482 + seg3, 340 + seg3), fill="blue")
-    #draw.ellipse((1482 - seg4, 740 - seg4, 1482 + seg4, 740 + seg4), fill="blue")
-    #draw.ellipse((1482 - 175, 740 - 175, 1482 + 175, 740 + 175), fill="blue")
+        #draw.ellipse((607 - seg1, 740 - seg1, 607 + seg1, 740 + seg1), fill="blue")
+        #draw.ellipse((607 - seg2, 340 - seg2, 607 + seg2, 340 + seg2), fill="blue")
+        #draw.ellipse((1482 - seg3, 340 - seg3, 1482 + seg3, 340 + seg3), fill="blue")
+        #draw.ellipse((1482 - seg4, 740 - seg4, 1482 + seg4, 740 + seg4), fill="blue")
+        #draw.ellipse((1482 - 175, 740 - 175, 1482 + 175, 740 + 175), fill="blue")
 
-    #add text to top of chart
-    ##h, w  = newchart.size
-    w = 1080
+        #add text to top of chart
+        ##h, w  = newchart.size
+        w = 1080
 
-    ptext = name + " Word Association Summary"
-    subtext = "n=" + str(tUser) + " participants"
-    draw.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
-    draw.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
+        ptext = name + " Word Association Summary"
+        subtext = "n=" + str(tUser) + " participants"
+        draw.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
+        draw.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
 
-    draw2.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
-    draw2.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
+        draw2.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
+        draw2.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
 
-    #newchart.show()
-    newchart.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart" + ".png", "PNG")
-    newchart2.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart_Words" + ".png", "PNG")
+        #newchart.show()
+        newchart.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart" + ".png", "PNG")
+        newchart2.save("./desktop-application/app/graphics/wordchart/" "OVERALL_"+ name + "WordChart_Words" + ".png", "PNG")
+    except:
+        return
 
 def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
     # Calculate the centerline based on overall positive and negative totals
     pos = sum(wrd.total for wrd in overall if wrd.ident == "pos")
     neg = sum(wrd.total for wrd in overall if wrd.ident == "neg")
-    cline = int(pos / (pos + neg) * 100)
+
+    if len(typList) > 1:
+        cline = int(pos / (pos + neg) * 100)
+    else:
+        cline = 50
 
     # Create and sort the data
     data = [(sec, int(sec.pos / (sec.pos + sec.neg) * 100)) for sec in arr]
@@ -755,7 +807,7 @@ def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
                 if cw.name == w.name:
                     tp = cw.total / cat.userTotal
                     op = w.total / totalP
-                    if tp > op:
+                    if tp >= op:
                         bottom.append('<' + cw.name)
                     elif tp < op:
                         top.append('>' + cw.name)
@@ -798,7 +850,8 @@ def generateWordGraphicHub(overall, departments, positions, departList, position
     generateWordGraphic(overall, "Overall", tUsers, chart, fnt)
 
     #high potential
-    generateWordGraphic(hipo.words, "High-Potential", hipo.userTotal, chart, fnt)
+    if hipo.userTotal > 0:
+        generateWordGraphic(hipo.words, "High-Potential", hipo.userTotal, chart, fnt)
 
     for dep in departments:
         generateWordGraphic(dep.words, dep.name, dep.userTotal, chart, fnt)
@@ -828,7 +881,7 @@ print("Participation Graph Complete")
 
 print("Generating Question Graphics")
 generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-generateAllDials(results.questionassessment.categories, dial, pointer, mf, companyname, results.questionassessment.pScore)
+generateAllDials(results.questionassessment.categories, dial, pointer, xsf, companyname, results.questionassessment.pScore)
 print ("Question Graphics Complete")
 
 print("Generating Word Assosiation Graphics")

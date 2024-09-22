@@ -128,8 +128,9 @@ def noScore(userList, departList, positionList, depnoscore, posnoscore, hiponosc
                 if user.score == -1:
                     p.participationScore += 1
                 break
+    if hiponoscore[0].userTotal > 0:
+        hiponoscore[0].participationScore = ((hiponoscore[0].userTotal-hiponoscore[0].participationScore) / hiponoscore[0].userTotal)*100
 
-    hiponoscore[0].participationScore = ((hiponoscore[0].userTotal-hiponoscore[0].participationScore) / hiponoscore[0].userTotal)*100
     overallnoscore[0].participationScore = ((overallnoscore[0].userTotal-overallnoscore[0].participationScore) / overallnoscore[0].userTotal)*100
 
     for d in depnoscore:
@@ -246,6 +247,8 @@ def generateQuestionWeightedScore(typearr, tpscore, flag):
 
                 typ.weightedScore = tweight
                 typ.pscore = (typ.weightedScore / tpscore) * 100
+                if typ.pscore < 0:
+                    typ.pscore = 0
 
 
 
@@ -267,11 +270,19 @@ def generateWeightedScore(categories, tpScore):
         generateQuestionWeightedScore(cat.departments, cat.tPScore, False)
         generateQuestionWeightedScore(cat.positions, cat.tPScore,False)
 
-        cat.hipo.weightedScore = generateQuestionWeightedScore(cat.hipo, cat.tPScore,True)
-        cat.hipo.pscore = (cat.hipo.weightedScore / cat.tPScore) * 100
+        try:
+            cat.hipo.weightedScore = generateQuestionWeightedScore(cat.hipo, cat.tPScore,True)
+            cat.hipo.pscore = (cat.hipo.weightedScore / cat.tPScore) * 100
+            if cat.hipo.pscore < 0:
+                    cat.hipo.pscore = 0
+        except:
+            cat.hipo.weightedScore = -1000
+            cat.hipo.pscore = -1000
 
         cat.weightedScore = generateQuestionWeightedScore(cat, cat.tPScore, True)
         cat.pscore = ( cat.weightedScore / cat.tPScore) * 100
+        if cat.pscore < 0:
+                    cat.pscore = 0
         #for ques in cat.ques:
         #   cat.weightedScore += ques.weighted
 
@@ -290,4 +301,6 @@ print("Question Data Loaded Successfully")
 
 assessment.tpScore = determinetotalPossibleScore(assessment.quesList)
 assessment.pScore = generateWeightedScore(assessment.categories, assessment.tpScore)
+if assessment.pScore < 0:
+                    assessment.pScore = 0
 print("Completed Question Scoring")

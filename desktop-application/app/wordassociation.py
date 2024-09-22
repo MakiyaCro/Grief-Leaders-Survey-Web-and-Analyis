@@ -259,7 +259,10 @@ def clusterPercents(departments, positions, hipos, overall, overallTotal):
     
     for clstr in hipos.clusters:
         for wrd in clstr.words:
-                wrd.percent =  wrd.total / hipos.userTotal
+                try:
+                    wrd.percent =  wrd.total / hipos.userTotal
+                except:
+                    wrd.percent = -1
 
 def standarddeviation(data, mean):
     sum = 0

@@ -27,8 +27,12 @@ dial = Image.open("./desktop-application/app/graphics/dial.png")
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 mf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 100)
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
+gradient = Image.open("./desktop-application/app/graphics/gradient/gradient.png")
+tab = Image.open("./desktop-application/app/graphics/gradient/tab.png")
+
 wordImportFile = pd.read_csv("./desktop-application/app/words.csv")
 clusterImportFile = pd.read_csv("./desktop-application/app/clusters.csv")
+
 
 wordList = []
 
@@ -184,7 +188,7 @@ def place_dials_on_document(doc, dials):
     # Clear the dials dictionary to free up memory
     # Add page breaks after the dials
 
-    target_paragraph.add_run().add_break(WD_BREAK.PAGE)
+    #target_paragraph.add_run().add_break(WD_BREAK.PAGE)
 
     dials.clear()
 
@@ -353,8 +357,7 @@ def processClusters(clusters, userwords):
         for cls in clusters:
             for w in cls.words:
                 if w.name == words:
-                    cls.totalF += 1
-                    
+                    cls.totalF += 1                   
 
 def generate_individual_report(user):
     clusterList = []
@@ -374,9 +377,6 @@ def generate_individual_report(user):
     # Place the word graphics on the document
     #place_word_graphics_on_document(doc, user)
 
-            
-
-    
     improvement_table = doc.tables[0]  # Assuming it's the first table
     
     ordered_categories = ['RFP', 'EPS', 'CM', 'LdrSpv', 'SrLdr']
@@ -415,9 +415,8 @@ def generate_individual_report(user):
     else:
         paragraph = Paragraph(paragraph, doc)
     run = paragraph.add_run()
-    run.add_break(WD_BREAK.PAGE)
+    #run.add_break(WD_BREAK.PAGE)
 
-    # TODO: Add code to populate Word Association Results and Pattern Analysis table
     improvement_table = doc.tables[1]
 
     initClusters(clusterList, wordList, clusterImportFile)
@@ -433,7 +432,7 @@ def generate_individual_report(user):
         set_cell_color(cell, c)
 
 
-    remove_empty_end_pages(doc)
+    #remove_empty_end_pages(doc)
     
     # Create the reports directory if it doesn't exist
     report_dir = os.path.join('desktop-application', 'app', 'report')

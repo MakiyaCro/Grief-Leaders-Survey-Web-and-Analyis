@@ -28,6 +28,8 @@ departmentList = []
 positionList = []
 
 userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
+#userImportFile = pd.read_csv("./desktop-application/app/import-libertyedu-1.csv")
+
 #print(userImportFile.to_string())
 
 #checks to see if initial 4 values match and if correct will return file without check values
@@ -132,7 +134,9 @@ if fileCheck(userImportFile) == -1:
     print("Error: Check Errors")
 
 initUsers(userList, departmentList, userImportFile)
+
 addAns(userList, "exported_results_1690216079.csv")
+#addAns(userList, "exported_results_1726865868.csv")
 userWords(userList)
 
 print("User Data Loaded Successfully")

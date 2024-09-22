@@ -90,70 +90,84 @@ def add_table_to_slide(slide, typ, name, dialpic):
         df[yes_col] = pd.to_numeric(df[yes_col], errors='coerce')
         
         # Split the dataframe into two based on the 60% threshold
-        df_positive = df[df[yes_col] > 60]
-        df_improvement = df[df[yes_col] <= 60]
+        df_positive = df[(df[yes_col] > 60) & (~df[qn_col].isin([61, 62])) | 
+                 (df[yes_col] <= 60) & (df[qn_col].isin([61, 62]))]
+        df_improvement = df[(df[yes_col] <= 60) & (~df[qn_col].isin([61, 62])) | 
+                    (df[yes_col] > 60) & (df[qn_col].isin([61, 62]))]
 
         # Sort both dataframes by 'Attribute'
         df_positive = df_positive.sort_values(by='Attribute')
         df_improvement = df_improvement.sort_values(by='Attribute')
 
         def create_table_slide(df_slice, slide_title):
-            slide = add_slide_with_title(prs, 3, slide_title)
-            add_image_to_slide(slide, dialpic, 11.5, 0.025, 1.5)
+            rows_per_slide = 13
+            total_rows = df_slice.shape[0]
+            slide_count = (total_rows + rows_per_slide - 1) // rows_per_slide
 
-            rows, cols = df_slice.shape[0] + 1, df_slice.shape[1]
-            left, top, width, height = Inches(1), Inches(1.75), Inches(9), Inches(2)
-            table = slide.shapes.add_table(rows, cols, left, top, width, height).table
+            for slide_num in range(slide_count):
+                start_row = slide_num * rows_per_slide
+                end_row = min((slide_num + 1) * rows_per_slide, total_rows)
+                df_subset = df_slice.iloc[start_row:end_row]
 
-            # Set column widths
-            table.columns[0].width = Inches(2)  # Attribute column
-            table.columns[1].width = Inches(0.5)  # QN column
-            table.columns[2].width = Inches(8)     # Description column
-            table.columns[3].width = Inches(0.75)  # %Yes column
+                if slide_num == 0:
+                    slide = add_slide_with_title(prs, 3, slide_title)
+                else:
+                    slide = add_slide_with_title(prs, 3, f"{slide_title} (cont.)")
 
-            # Set the headers
-            headers = ['Attribute', qn_col, 'Description', '%Yes']  # Changed last column to '%Yes'
-            for i, header in enumerate(headers):
-                cell = table.cell(0, i)
-                cell.text = str(header)
-                cell.fill.solid()
-                cell.fill.fore_color.rgb = RGBColor(91, 155, 213)  # #5b9bd5
-                cell.text_frame.paragraphs[0].font.size = Pt(12)
-                cell.text_frame.paragraphs[0].font.bold = True
-                cell.text_frame.paragraphs[0].font.color.rgb = RGBColor(0, 0, 0)  # Black text
+                add_image_to_slide(slide, dialpic, 11.5, 0.025, 1.5)
 
-            # Set row heights
-            for i in range(rows):
-                table.rows[i].height = Inches(0.35)
+                rows, cols = df_subset.shape[0] + 1, df_subset.shape[1]
+                left, top, width, height = Inches(1), Inches(1.75), Inches(9), Inches(2)
+                table = slide.shapes.add_table(rows, cols, left, top, width, height).table
 
-            # Fill in the table with data
-            for row in range(1, rows):
-                for col in range(cols):
-                    cell = table.cell(row, col)
-                    value = df_slice.iloc[row - 1, col]
-                    if col == 3:  # %Yes column
-                        cell.text = f"{int(value)}%"  # Convert to integer and add % sign
-                    else:
-                        cell.text = str(value)
+                # Set column widths
+                table.columns[0].width = Inches(2)  # Attribute column
+                table.columns[1].width = Inches(0.5)  # QN column
+                table.columns[2].width = Inches(8)     # Description column
+                table.columns[3].width = Inches(0.75)  # %Yes column
+
+                # Set the headers
+                headers = ['Attribute', qn_col, 'Description', '%Yes']
+                for i, header in enumerate(headers):
+                    cell = table.cell(0, i)
+                    cell.text = str(header)
                     cell.fill.solid()
-                    cell.fill.fore_color.rgb = RGBColor(255, 255, 255) if row % 2 == 0 else RGBColor(173, 216, 230)
-                    for paragraph in cell.text_frame.paragraphs:
-                        paragraph.font.size = Pt(12)
+                    cell.fill.fore_color.rgb = RGBColor(91, 155, 213)  # #5b9bd5
+                    cell.text_frame.paragraphs[0].font.size = Pt(12)
+                    cell.text_frame.paragraphs[0].font.bold = True
+                    cell.text_frame.paragraphs[0].font.color.rgb = RGBColor(0, 0, 0)  # Black text
 
-        # Create positive attributes slide
+                # Set row heights
+                for i in range(rows):
+                    table.rows[i].height = Inches(0.35)
+
+                # Fill in the table with data
+                for row in range(1, rows):
+                    for col in range(cols):
+                        cell = table.cell(row, col)
+                        value = df_subset.iloc[row - 1, col]
+                        if col == 3:  # %Yes column
+                            cell.text = f"{int(value)}%"  # Convert to integer and add % sign
+                        else:
+                            cell.text = str(value)
+                        cell.fill.solid()
+                        cell.fill.fore_color.rgb = RGBColor(255, 255, 255) if row % 2 == 0 else RGBColor(173, 216, 230)
+                        for paragraph in cell.text_frame.paragraphs:
+                            paragraph.font.size = Pt(12)
+
+        # Create positive attributes slide(s)
         if not df_positive.empty:
             create_table_slide(df_positive, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Positive Attributes")
 
-        # Create improvements slide
+        # Create improvements slide(s)
         if not df_improvement.empty:
             create_table_slide(df_improvement, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Improvements")
 
 
 def init_pres_slides(prs, pictures):
     # Add title slide
-    slide = add_slide_with_title(prs, 0, "Title Place Holder")
+    slide = add_slide_with_title(prs, 0, "Liberty University")
     slide.placeholders[1].text = "Cultural Assessment Leadership Team Review"
-
 
     for folder in pictures:
         if folder.folder == 'participation':
@@ -164,8 +178,6 @@ def init_pres_slides(prs, pictures):
                 typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('barchart', '')
                 add_image_to_slide(slide, pic, horiz, 1.5, 5.625)
                 horiz += 6.5
-
-    #add 
 
     # Add dial layout slides
     for folder in pictures:
@@ -183,39 +195,52 @@ def init_pres_slides(prs, pictures):
                 if pic.name in positions:
                     add_image_to_slide(slide, pic, *positions[pic.name])
 
-    
+    # Define the desired order
+    desired_order = ['RFP', 'EPS', 'CM', 'SrLdr', 'LdrSpv']
 
+    # Create a dictionary to store folders by their type
+    folder_dict = {}
 
-    # Add question graphs slides
+    # Organize folders by their type
     for folder in pictures:
         if folder.folder == 'questiongraphs':
             for pic in folder.images:
-                
                 tempname = pic.name.replace('.png', '')
                 typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('barchart', '')
+                if name not in folder_dict:
+                    folder_dict[name] = []
+                folder_dict[name].append((folder, pic, typ))
+
+    # Process the folders in the desired order
+    for name in desired_order:
+        if name in folder_dict:
+            for folder, pic, typ in folder_dict[name]:
+                # Find the corresponding dial picture
+                dialpicture = None
                 for dfolder in pictures:
                     if dfolder.folder == "dials":
                         for dialpic in dfolder.images:
                             if name in dialpic.name:
                                 dialpicture = dialpic
-                add_table_to_slide(slide, typ, name, dialpicture)
-
-                slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
-                add_image_to_slide(slide, pic, 2.5, 1.5, 8)
-                add_image_to_slide(slide, dialpicture, 11.5, 0.025, 1.5)
-
-
-                slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Breakout")
-                add_image_to_slide(slide, dialpicture, 11.5, 0.025, 1.5)
-            
-                for tfolder in pictures:
-                    if tfolder.folder == "questiontables":
-                        for tpic in tfolder.images:
-                            if name in tpic.name and typ in tpic.name and 'concat' in tpic.name:
-                                add_image_to_slide(slide, tpic, 2.5, 1.6, 8)
-
-                #slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
+                                break
+                        if dialpicture:
+                            break
                 
+                if dialpicture:
+                    add_table_to_slide(slide, typ, name, dialpicture)
+
+                    slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
+                    add_image_to_slide(slide, pic, 2.5, 1.5, 8)
+                    add_image_to_slide(slide, dialpicture, 11.5, 0.025, 1.5)
+
+                    slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Breakout")
+                    add_image_to_slide(slide, dialpicture, 11.5, 0.025, 1.5)
+                
+                    for tfolder in pictures:
+                        if tfolder.folder == "questiontables":
+                            for tpic in tfolder.images:
+                                if name in tpic.name and typ in tpic.name and 'concat' in tpic.name:
+                                    add_image_to_slide(slide, tpic, 2.5, 1.6, 8)
 
     # Add word graphs slides before word chart
     for folder in pictures:
