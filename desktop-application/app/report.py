@@ -27,8 +27,8 @@ dial = Image.open("./desktop-application/app/graphics/dial.png")
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 mf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 100)
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
-gradient = Image.open("./desktop-application/app/graphics/gradient/gradient.png")
-tab = Image.open("./desktop-application/app/graphics/gradient/tab.png")
+gradient = Image.open("./desktop-application/app/graphics/gradient.png")
+tab = Image.open("./desktop-application/app/graphics/tab.png")
 
 wordImportFile = pd.read_csv("./desktop-application/app/words.csv")
 clusterImportFile = pd.read_csv("./desktop-application/app/clusters.csv")
@@ -192,97 +192,82 @@ def place_dials_on_document(doc, dials):
 
     dials.clear()
 
-def generateWordGraphic(arr, name, tUser, chart, fnt):
-    newchart = chart.copy()
-    newchart2 = chart.copy()
-
-    seg1 = 0
-    seg1T = 0
-    seg1Words = []
-
-    seg2 = 0
-    seg2T = 0
-    seg2Words = []
-
-    seg3 = 0
-    seg3T = 0
-    seg3Words = []
-
-    seg4 = 0
-    seg4T = 0
-    seg4Words = []
+def generateWordGraphic(arr, name, tUser, gradient, tab, fnt):
+    # Ensure both images are in RGBA mode
+    newgradient = gradient.copy().convert('RGBA')
+    newtab = tab.copy().convert('RGBA')
 
     pos = 0
     neg = 0
-    for word in wordList:
-        for w in arr:
-            if w == word:
-                if word.ident == "neg":
-                    neg += 1
-                    seg1 +=1
 
     for word in arr:
         if word.ident == "neg":
             neg += 1
-            if (word.total / tUser) < .5:
-                seg1 +=1
-                seg1T += word.total
-                seg1Words.append(word)
-            else:
-                seg2 +=1
-                seg2T += word.total
-                seg2Words.append(word)
         elif word.ident == "pos":
             pos += 1
-            if (word.total / tUser) >= .5:
-                seg3 +=1
-                seg3T += word.total
-                seg3Words.append(word)
-            else:
-                seg4 +=1
-                seg4T += word.total
-                seg4Words.append(word)
 
+    total = pos + neg
+    pos_percent = (pos / total) if total > 0 else 0
+    neg_percent = (neg / total) if total > 0 else 0
 
+    # Calculate the position of the tab based on the pos_percent
+    gradient_width, gradient_height = newgradient.size
+    tab_width, tab_height = newtab.size
+    max_tab_position = gradient_width - tab_width
+    tab_position = int(max_tab_position * pos_percent)
 
+    # Create a new image with the same size and mode as the gradient
+    composite = Image.new('RGBA', newgradient.size, (0, 0, 0, 0))
 
-    #have totals for all words
-    draw = ImageDraw.Draw(newchart)
+    # Paste the gradient onto the composite image
+    composite = Image.alpha_composite(composite, newgradient)
 
+    # Create a new transparent image for the tab, matching the size of the gradient
+    tab_layer = Image.new('RGBA', newgradient.size, (0, 0, 0, 0))
+    
+    # Calculate vertical position to center the tab
+    tab_vertical_position = (gradient_height - tab_height) // 2
+    
+    # Paste the tab onto the tab layer
+    tab_layer.paste(newtab, (tab_position, tab_vertical_position), newtab)
 
-    seg1p = str(int((seg1T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
-    seg2p = str(int((seg2T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
-    seg3p = str(int((seg3T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
-    seg4p = str(int((seg4T / (seg1T+seg2T+seg3T+seg4T))*100)) + "%"
+    # Use alpha_composite to combine the gradient and tab
+    composite = Image.alpha_composite(composite, tab_layer)
 
-    draw.text((200,650), "Words Selected:           " + str(seg1), "black", font=fnt)
-    draw.text((200,250), "Words Selected:           " + str(seg2), "white", font=fnt)
-    draw.text((1100,250), "Words Selected:           " + str(seg3), "white", font=fnt)
-    draw.text((1100,650), "Words Selected:           " + str(seg4), "white", font=fnt)
+    # Add percentage text and total word count
+    draw = ImageDraw.Draw(composite)
 
-    draw.text((200,750), "Percentage of Total:    " + seg1p, "black", font=fnt)
-    draw.text((200,350), "Percentage of Total:    " + seg2p, "white", font=fnt)
-    draw.text((1100,350), "Percentage of Total:    " + seg3p, "white", font=fnt)
-    draw.text((1100,750), "Percentage of Total:    " + seg4p, "white", font=fnt)
+    # Negative percentage (left side)
+    neg_text = f"{int(neg_percent * 100)}%"
+    neg_bbox = draw.textbbox((0, 0), neg_text, font=fnt)
+    neg_text_width = neg_bbox[2] - neg_bbox[0]
+    neg_text_height = neg_bbox[3] - neg_bbox[1]
+    neg_position = (10, (gradient_height - neg_text_height) // 2)  # 10 pixels from left edge
+    draw.text(neg_position, neg_text, font=fnt, fill=(0, 0, 0))  # Black text
 
-    w = 1080
+    # Positive percentage (right side)
+    pos_text = f"{int(pos_percent * 100)}%"
+    pos_bbox = draw.textbbox((0, 0), pos_text, font=fnt)
+    pos_text_width = pos_bbox[2] - pos_bbox[0]
+    pos_text_height = pos_bbox[3] - pos_bbox[1]
+    pos_position = (gradient_width - pos_text_width - 10, (gradient_height - pos_text_height) // 2)  # 10 pixels from right edge
+    draw.text(pos_position, pos_text, font=fnt, fill=(0, 0, 0))  # Black text
 
-    ptext = name + "Word Association Summary"
-    subtext = "n=" + str(tUser) + " participants"
-    draw.text((w, 50), ptext, (0,0,0), font=fnt, anchor="mm")
-    draw.text((w, 100), subtext, (0,0,0), font=fnt, anchor="mm")
+    # Total word count (center)
+    total_text = str(total)
+    total_bbox = draw.textbbox((0, 0), total_text, font=fnt)
+    total_text_width = total_bbox[2] - total_bbox[0]
+    total_text_height = total_bbox[3] - total_bbox[1]
+    total_position = ((gradient_width - total_text_width) // 2, (gradient_height - total_text_height) // 2)
+    draw.text(total_position, total_text, font=fnt, fill=(0, 0, 0))  # Black text
 
+    # Convert the composite image to a BytesIO object
     img_byte_arr = io.BytesIO()
-
-    
-    newchart.save(img_byte_arr, format='PNG')
-
-    
-    # Reset the BytesIO object positions
+    composite.save(img_byte_arr, format='PNG')
     img_byte_arr.seek(0)
 
-    
     return img_byte_arr
+
 
 def place_word_graphics_on_document(doc, user):
     # Find the paragraph with [WordMatrix] and modify it
@@ -298,8 +283,16 @@ def place_word_graphics_on_document(doc, user):
     # Remove the [WordMatrix] placeholder
     target_paragraph.text = target_paragraph.text.replace('[WordMatrix]', '')
 
+    tempwordList = []
+
+    for wrd in wordList:
+        for w in user.words:
+            if w == wrd.name:
+                tempwordList.append(word(wrd.name, wrd.ident))
+                break
+
     # Generate the word graphics
-    img_byte_arr = generateWordGraphic(user.words, "", 1 , wordchart, mf)
+    img_byte_arr = generateWordGraphic(tempwordList, "", 1 , gradient, tab, mf)
 
     # Add the images to the document side by side
     run = target_paragraph.add_run()
@@ -309,6 +302,15 @@ def place_word_graphics_on_document(doc, user):
 
     # Set the position of the images (you may need to adjust these values)
     picture1.left = Inches(1)
+
+    #for debugging
+    word_list_paragraph = doc.add_paragraph()
+    word_list_paragraph.add_run("Words used in this analysis:").bold = True
+
+
+    for wrd in tempwordList:
+        word_item = word_list_paragraph.add_run("\n"+ wrd.name + ": " + wrd.ident)
+        word_item.font.size = Pt(10)
 
 def remove_empty_end_pages(doc):
     # Get all paragraphs and tables in the document
@@ -375,7 +377,7 @@ def generate_individual_report(user):
     place_dials_on_document(doc, dials)
 
     # Place the word graphics on the document
-    #place_word_graphics_on_document(doc, user)
+    place_word_graphics_on_document(doc, user)
 
     improvement_table = doc.tables[0]  # Assuming it's the first table
     

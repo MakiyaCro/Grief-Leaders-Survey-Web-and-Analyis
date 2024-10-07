@@ -241,6 +241,8 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
     if all_same(df["STD"]):
         del df["STD"]
 
+    
+
     newdf.name = catigory.catigory + "_" + endding
 
     qtg.append(df)
@@ -296,7 +298,7 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
     # Apply the styling function to the new DataFrame and exclude the last column
     style2 = newdf.style.hide(axis="index").set_properties(**properties).set_table_styles([index_names, headers]).apply(style_outliers, axis=1, exclude_last_column=True)
 
-
+    
     dfi.export(style2, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_concat.png")
     #dfi.export(style, "./desktop-application/app/graphics/questiontables/" + endding + "_" + catigory.catigory + "_full.png")
     """try:
@@ -493,7 +495,8 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
             del df["Hipo"]
         #blankIndex = ['']*len(df)
         #df.index=blankIndex
-
+        if len(arr) == 1:
+            del df[arr[0].name]
         #styleize
 
         index_names = {
@@ -645,7 +648,7 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
             if counter == 6:
                 y = 650
             if counter > 5:
-                x = 600
+                x = 650
 
         counter = 1
         x = 200
@@ -657,7 +660,7 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
             if counter == 6:
                 y = 250
             if counter > 5:
-                x = 600
+                x = 650
 
         counter = 1
         x = 1100
@@ -669,7 +672,7 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
             if counter == 6:
                 y = 250
             if counter > 5:
-                x = 1500
+                x = 1550
 
         counter = 1
         x = 1100
@@ -681,7 +684,7 @@ def generateWordGraphic(arr, name, tUser, chart, fnt):
             if counter == 6:
                 y = 650
             if counter > 5:
-                x = 1500
+                x = 1550
         
         #x0, y0, x1, y1
         #center points for segments

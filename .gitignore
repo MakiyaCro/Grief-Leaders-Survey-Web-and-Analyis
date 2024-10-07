@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 *.png
 desktop-application/app/powerpoint/test.pptx
+desktop-application/app/powerpoint/originalData.pptx

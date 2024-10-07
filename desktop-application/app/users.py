@@ -27,8 +27,10 @@ userList = []
 departmentList = []
 positionList = []
 
-userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
-#userImportFile = pd.read_csv("./desktop-application/app/import-libertyedu-1.csv")
+#userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
+
+#university data
+userImportFile = pd.read_csv("./desktop-application/app/import-libertyedu-1.csv")
 
 #print(userImportFile.to_string())
 
@@ -135,8 +137,10 @@ if fileCheck(userImportFile) == -1:
 
 initUsers(userList, departmentList, userImportFile)
 
-addAns(userList, "exported_results_1690216079.csv")
-#addAns(userList, "exported_results_1726865868.csv")
+#addAns(userList, "exported_results_1690216079.csv")
+
+#university data
+addAns(userList, "exported_results_1726865868.csv")
 userWords(userList)
 
 print("User Data Loaded Successfully")
