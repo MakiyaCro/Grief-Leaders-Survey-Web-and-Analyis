@@ -27,7 +27,7 @@ dial = Image.open("./desktop-application/app/graphics/dial.png")
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 mf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 100)
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
-gradient = Image.open("./desktop-application/app/graphics/gradient.png")
+gradient = Image.open("./desktop-application/app/graphics/gradientv3.png")
 tab = Image.open("./desktop-application/app/graphics/tab.png")
 
 wordImportFile = pd.read_csv("./desktop-application/app/words.csv")
@@ -193,9 +193,27 @@ def place_dials_on_document(doc, dials):
     dials.clear()
 
 def generateWordGraphic(arr, name, tUser, gradient, tab, fnt):
-    # Ensure both images are in RGBA mode
+    # Calculate Word page width in pixels (6.5 inches * 300 DPI)
+    PAGE_WIDTH_PIXELS = int(6.5 * 300)  # 1950 pixels at 300 DPI
+    DESIRED_WIDTH = int(PAGE_WIDTH_PIXELS * 0.7)  # 70% of page width
+    
+    # Calculate new height maintaining original aspect ratio
+    original_ratio = gradient.size[1] / gradient.size[0]
+    new_height = int(DESIRED_WIDTH * original_ratio)
+    
+    # Add extra height for text above gradient (adjust this value as needed)
+    text_padding = 80
+    total_height = new_height + text_padding
+    
+    # Resize the gradient maintaining aspect ratio
     newgradient = gradient.copy().convert('RGBA')
+    newgradient = newgradient.resize((DESIRED_WIDTH, new_height), Image.Resampling.LANCZOS)
+
+    # Make tab width 1% of gradient width and match gradient height
+    new_tab_width = int(DESIRED_WIDTH * 0.01)  # 1% of gradient width
+    new_tab_height = new_height  # Match gradient height after resize
     newtab = tab.copy().convert('RGBA')
+    newtab = newtab.resize((new_tab_width, new_tab_height), Image.Resampling.LANCZOS)
 
     pos = 0
     neg = 0
@@ -208,66 +226,59 @@ def generateWordGraphic(arr, name, tUser, gradient, tab, fnt):
 
     total = pos + neg
     pos_percent = (pos / total) if total > 0 else 0
-    neg_percent = (neg / total) if total > 0 else 0
 
     # Calculate the position of the tab based on the pos_percent
-    gradient_width, gradient_height = newgradient.size
-    tab_width, tab_height = newtab.size
-    max_tab_position = gradient_width - tab_width
+    max_tab_position = DESIRED_WIDTH - new_tab_width
     tab_position = int(max_tab_position * pos_percent)
 
-    # Create a new image with the same size and mode as the gradient
-    composite = Image.new('RGBA', newgradient.size, (0, 0, 0, 0))
+    # Create a new image with the desired width and extra height
+    composite = Image.new('RGBA', (DESIRED_WIDTH, total_height), (0, 0, 0, 0))
 
-    # Paste the gradient onto the composite image
-    composite = Image.alpha_composite(composite, newgradient)
+    # Paste the gradient onto the composite image, positioned below the text area
+    gradient_layer = Image.new('RGBA', (DESIRED_WIDTH, total_height), (0, 0, 0, 0))
+    gradient_layer.paste(newgradient, (0, text_padding))
+    composite = Image.alpha_composite(composite, gradient_layer)
 
-    # Create a new transparent image for the tab, matching the size of the gradient
-    tab_layer = Image.new('RGBA', newgradient.size, (0, 0, 0, 0))
+    # Create a new transparent image for the tab
+    tab_layer = Image.new('RGBA', (DESIRED_WIDTH, total_height), (0, 0, 0, 0))
     
-    # Calculate vertical position to center the tab
-    tab_vertical_position = (gradient_height - tab_height) // 2
-    
-    # Paste the tab onto the tab layer
-    tab_layer.paste(newtab, (tab_position, tab_vertical_position), newtab)
+    # Paste the tab onto the tab layer, aligned with gradient
+    tab_layer.paste(newtab, (tab_position, text_padding))
 
     # Use alpha_composite to combine the gradient and tab
     composite = Image.alpha_composite(composite, tab_layer)
 
-    # Add percentage text and total word count
+    # Add percentage text
     draw = ImageDraw.Draw(composite)
 
-    # Negative percentage (left side)
-    neg_text = f"{int(neg_percent * 100)}%"
-    neg_bbox = draw.textbbox((0, 0), neg_text, font=fnt)
-    neg_text_width = neg_bbox[2] - neg_bbox[0]
-    neg_text_height = neg_bbox[3] - neg_bbox[1]
-    neg_position = (10, (gradient_height - neg_text_height) // 2)  # 10 pixels from left edge
-    draw.text(neg_position, neg_text, font=fnt, fill=(0, 0, 0))  # Black text
+    # Scale font size based on new dimensions
+    font_scale = new_height / gradient.size[1]  # Scale based on height ratio
+    scaled_font_size = int(fnt.size * font_scale)
+    scaled_font = fnt.font_variant(size=scaled_font_size)
 
-    # Positive percentage (right side)
+    # Positive percentage positioned above the tab
     pos_text = f"{int(pos_percent * 100)}%"
-    pos_bbox = draw.textbbox((0, 0), pos_text, font=fnt)
+    pos_bbox = draw.textbbox((0, 0), pos_text, font=scaled_font)
     pos_text_width = pos_bbox[2] - pos_bbox[0]
     pos_text_height = pos_bbox[3] - pos_bbox[1]
-    pos_position = (gradient_width - pos_text_width - 10, (gradient_height - pos_text_height) // 2)  # 10 pixels from right edge
-    draw.text(pos_position, pos_text, font=fnt, fill=(0, 0, 0))  # Black text
+    
+    # Position text centered above the tab
+    text_x = tab_position + (new_tab_width - pos_text_width) // 2
+    text_y = (text_padding - pos_text_height) // 2  # Centered in the padding space
+    
+    # Draw the text
+    draw.text((text_x, text_y), pos_text, font=scaled_font, fill=(0, 0, 0))
 
-    # Total word count (center)
-    total_text = str(total)
-    total_bbox = draw.textbbox((0, 0), total_text, font=fnt)
-    total_text_width = total_bbox[2] - total_bbox[0]
-    total_text_height = total_bbox[3] - total_bbox[1]
-    total_position = ((gradient_width - total_text_width) // 2, (gradient_height - total_text_height) // 2)
-    draw.text(total_position, total_text, font=fnt, fill=(0, 0, 0))  # Black text
-
-    # Convert the composite image to a BytesIO object
+    # Convert to BytesIO with specific size information
     img_byte_arr = io.BytesIO()
-    composite.save(img_byte_arr, format='PNG')
+    composite.save(
+        img_byte_arr, 
+        format='PNG',
+        dpi=(300, 300)
+    )
+    
     img_byte_arr.seek(0)
-
     return img_byte_arr
-
 
 def place_word_graphics_on_document(doc, user):
     # Find the paragraph with [WordMatrix] and modify it
@@ -292,25 +303,24 @@ def place_word_graphics_on_document(doc, user):
                 break
 
     # Generate the word graphics
-    img_byte_arr = generateWordGraphic(tempwordList, "", 1 , gradient, tab, mf)
+    img_byte_arr = generateWordGraphic(tempwordList, "", 1, gradient, tab, mf)
 
     # Add the images to the document side by side
     run = target_paragraph.add_run()
     
-    picture1 = run.add_picture(img_byte_arr, width=Inches(3.5))
+    # Changed from 3.5 to 6 inches (70% of standard 8.5" page width)
+    picture1 = run.add_picture(img_byte_arr, width=Inches(6))
 
-
-    # Set the position of the images (you may need to adjust these values)
-    picture1.left = Inches(1)
+    # Adjust left margin to center the wider image
+    picture1.left = Inches(1.25)  # Centered on standard page with 1" margins
 
     #for debugging
-    word_list_paragraph = doc.add_paragraph()
-    word_list_paragraph.add_run("Words used in this analysis:").bold = True
+    #word_list_paragraph = doc.add_paragraph()
+    #word_list_paragraph.add_run("Words used in this analysis:").bold = True
 
-
-    for wrd in tempwordList:
-        word_item = word_list_paragraph.add_run("\n"+ wrd.name + ": " + wrd.ident)
-        word_item.font.size = Pt(10)
+    #for wrd in tempwordList:
+        #word_item = word_list_paragraph.add_run("\n"+ wrd.name + ": " + wrd.ident)
+        #word_item.font.size = Pt(10)
 
 def remove_empty_end_pages(doc):
     # Get all paragraphs and tables in the document

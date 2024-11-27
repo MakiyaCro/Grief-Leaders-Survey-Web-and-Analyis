@@ -1,24 +1,20 @@
-import users
 import pandas as pd
 import math
 
 #Constant Percentage for standard deviation
 CUTOFF = .15
 
-class wordassessment:
-    inituserList = users.userList
-    departList = users.departmentList
-    positionList = users.positionList
+class wordassessmentCls:
+    def __init__(self):
+        self.userTotal = 0
 
-    userTotal = 0
+        self.clusters = []
+        self.dataFrames = []
 
-    clusters = []
-    dataFrames = []
-
-    words = []
-    departmentScores = []
-    positionScores = []
-    hipoScores = []
+        self.words = []
+        self.departmentScores = []
+        self.positionScores = []
+        self.hipoScores = []
 
 class word:
     def __init__(self, name, ident):
@@ -67,10 +63,6 @@ class hipoScore:
         self.words = []
         self.clusters = []
 
-        
-#import all the words into 
-wordImportFile = pd.read_csv("./desktop-application/app/words.csv")
-clusterImportFile = pd.read_csv("./desktop-application/app/clusters.csv")
 
 def fileCheck(wordImportFile):
     column_names = list(wordImportFile.columns.values)
@@ -86,8 +78,6 @@ def fileCheck(wordImportFile):
     if column_names[1] != "ident":
         print("Error with frist column: Should be ident but is currently " + column_names[1])
         return-1
-
-
 #this is then asigned to each depatment from the assesment saved state  
 def initWords(wordList, wordImportFile):
     wordNameList = wordImportFile['word'].tolist()
@@ -363,7 +353,37 @@ def clusterFlag(departments, positions, hipos, overall):
         if  clstr.totalF / len(clstr.words) > .3:
             clstr.flag = True
 
+def run(wordImportFile, clusterImportFile, inituserList, departList, positionList):
 
+    wordassessment = wordassessmentCls()
+    #Error Checking
+    print("Word File Error Checking")
+    if fileCheck(wordImportFile) == -1:
+        print("Error: Check Errors")
+    
+
+    initDepartments(wordassessment.departmentScores, departList)
+    initPositions(wordassessment.positionScores, positionList)
+    initHipo(wordassessment.hipoScores)
+    addWords(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.words, wordImportFile, clusterImportFile)
+
+    #init the overall cluster
+    initClusters(wordassessment.clusters, wordassessment.words, clusterImportFile)
+    print("Word Association Data Loaded Successfully")
+
+    wordassessment.userTotal = wordParse(inituserList, wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.words)
+    wordScore(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0]) 
+    print("Completed Word Association Score")
+
+    clusterFill(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.clusters, wordassessment.words)
+    clusterPercents(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.clusters, wordassessment.userTotal)
+    clusterSTD(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.clusters)
+    clusterFlag(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.clusters)
+    print("Cluster Analysis Complete")
+    return wordassessment
+
+
+"""
 #Error Checking
 print("Word File Error Checking")
 if fileCheck(wordImportFile) == -1:
@@ -388,3 +408,4 @@ clusterPercents(wordassessment.departmentScores, wordassessment.positionScores, 
 clusterSTD(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.clusters)
 clusterFlag(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores[0], wordassessment.clusters)
 print("Cluster Analysis Complete")
+"""

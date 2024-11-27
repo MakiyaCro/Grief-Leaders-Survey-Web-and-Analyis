@@ -8,14 +8,14 @@ import graphics
 import csv
 
 imgpath = "./desktop-application/app/graphics/"
-fldrList = ['clustertables', 'dials', 'participation', 'questiongraphs', 'questiontables', 'wordchart', 'wordgraphs', 'wordtables']
+fldrList = ['clustertables', 'dials', 'gradient', 'participation', 'questiongraphs', 'questiontables', 'wordchart', 'wordgraphs', 'wordtables']
 typList = ['overall', 'department', 'position']
 prs = Presentation("./desktop-application/app/powerpoint/empty.pptx")
-qfile = pd.read_csv("./desktop-application/app/questionList.csv")
+#qfile = pd.read_csv("./desktop-application/app/questionList.csv")
 
 pictures = []
-qtg = graphics.qtg
-companyname = graphics.companyname
+#qtg = graphics.qtg
+#companyname = graphics.companyname
 
 class PresentationDetails:
     def __init__(self, title, date):
@@ -56,7 +56,7 @@ def add_slide_with_title(prs, layout_index, title_text):
 def add_image_to_slide(slide, image_details, left, top, width):
     slide.shapes.add_picture(image_details.path, Inches(left), Inches(top), Inches(width))
 
-def add_table_to_slide(slide, typ, name, dialpic):
+def add_table_to_slide(slide, typ, name, dialpic, qtg, qfile):
     df = None
     for tb in qtg:
         if typ in tb.name and name in tb.name:
@@ -95,9 +95,17 @@ def add_table_to_slide(slide, typ, name, dialpic):
         df_improvement = df[(df[yes_col] <= 60) & (~df[qn_col].isin([61, 62])) | 
                     (df[yes_col] > 60) & (df[qn_col].isin([61, 62]))]
 
-        # Sort both dataframes by 'Attribute'
-        df_positive = df_positive.sort_values(by='Attribute')
-        df_improvement = df_improvement.sort_values(by='Attribute')
+
+       # First, ensure both dataframes are properly sorted by Attribute and then by yes_col
+        df_positive = df_positive.sort_values(
+            by=['Attribute', yes_col], 
+            ascending=[True, True]  # True for Attribute (A-Z), False for yes_col (highest to lowest)
+        )
+
+        df_improvement = df_improvement.sort_values(
+            by=['Attribute', yes_col], 
+            ascending=[True, False]  # True for Attribute (A-Z), True for yes_col (lowest to highest)
+        )
 
         def create_table_slide(df_slice, slide_title):
             rows_per_slide = 13
@@ -163,8 +171,7 @@ def add_table_to_slide(slide, typ, name, dialpic):
         if not df_improvement.empty:
             create_table_slide(df_improvement, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Improvements")
 
-
-def init_pres_slides(prs, pictures):
+def init_pres_slides(prs, pictures, companyname, qtg, qfile):
     # Add title slide
     slide = add_slide_with_title(prs, 0, "Liberty University")
     slide.placeholders[1].text = "Cultural Assessment Leadership Team Review"
@@ -227,7 +234,7 @@ def init_pres_slides(prs, pictures):
                             break
                 
                 if dialpicture:
-                    add_table_to_slide(slide, typ, name, dialpicture)
+                    add_table_to_slide(slide, typ, name, dialpicture, qtg, qfile)
 
                     slide = add_slide_with_title(prs, 3, f"{name} {'Departmental' if typ == 'DEP' else 'Position'} Analysis")
                     add_image_to_slide(slide, pic, 2.5, 1.5, 8)
@@ -252,6 +259,13 @@ def init_pres_slides(prs, pictures):
                 elif pic.name == 'POS_WordBarchart.png':
                     slide = add_slide_with_title(prs, 3, "Position WordstoGraph")
                     add_image_to_slide(slide, pic, 2.5, 1.5, 7.5)
+
+    #add gradient for overall to one slide
+    for folder in pictures:
+        if folder.folder == 'gradient':
+            pic = folder.images[0]
+            slide = add_slide_with_title(prs, 3, "Overall Word Association Gradient")
+            add_image_to_slide(slide, pic, 2.5, 3.5, 7.5)
 
     # Add word chart and word chart words slides side by side
     wordchart_pairs = {}
@@ -285,15 +299,23 @@ def init_pres_slides(prs, pictures):
         if folder.folder == 'clustertables':
             for pic in folder.images:
                 tempname = pic.name.replace('.png', '')
-                typ, name = tempname.split('_')[0], tempname.split('_')[1].replace('clustertable', '')
+                typ, name, ident = tempname.split('_')[0], tempname.split('_')[1], tempname.split('_')[2].replace('clustertable', '')
+                if ident == 'p':
+                    tident = "positive"
+                else:
+                    tident = "negative"
 
-                slide = add_slide_with_title(prs, 1, f"{name} {'Department' if typ == 'DEP' else 'Position'} Word Analysis")
+                slide = add_slide_with_title(prs, 1, f"{name} {'Department' if typ == 'DEP' else 'Position'} Word Analysis (" + tident + ")")
                 add_image_to_slide(slide, pic, 3.25, 1.5, 5)
 
     prs.save("./desktop-application/app/powerpoint/test.pptx")
 
-# Initialize image paths
-init_pres_images(imgpath, fldrList, pictures)
 
-# Create presentation slides
-init_pres_slides(prs, pictures)
+
+
+def run(qtg, companyname, qfile):
+    # Initialize image paths
+    init_pres_images(imgpath, fldrList, pictures)
+    # Create presentation slides
+    init_pres_slides(prs, pictures, companyname, qtg, qfile)
+    print("Powerpoint Generation Complete")

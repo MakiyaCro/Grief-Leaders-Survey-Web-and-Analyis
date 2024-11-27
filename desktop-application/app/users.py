@@ -27,10 +27,11 @@ userList = []
 departmentList = []
 positionList = []
 
-#userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
+userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
+exportedDataFile = pd.read_csv("./desktop-application/app/results/exported_results_1690216079.csv")
 
 #university data
-userImportFile = pd.read_csv("./desktop-application/app/import-libertyedu-1.csv")
+#userImportFile = pd.read_csv("./desktop-application/app/import-libertyedu-1.csv")
 
 #print(userImportFile.to_string())
 
@@ -101,9 +102,9 @@ def initUsers(userList, departmentList, userImportFile):
     for i in userImportFile.index:
         userList.append(user(usrNameList[i], emailList[i], fNameList[i], lNameList[i], compList[i], locList[i], sttList[i], dprtList[i], hipoList[i], mngrList[i], pwList[i]))
 
-def addAns(userList, fName):
+def addAns(userList, ansFile):
     #open answer file
-    ansFile = pd.read_csv("./desktop-application/app/results/" + fName)
+    #ansFile = pd.read_csv("./desktop-application/app/results/" + fName)
     #print(scoreFile.to_string())
     #grab all the usernames 
     ansUser = ansFile['User Name'].tolist()
@@ -131,16 +132,35 @@ def userWords(userList):
             temp.pop()
             user.words = [s.strip() for s in temp[0].split(',')]
 
+def run(userImportFile, exportedDataFile):
+    #Error Checking
+    if fileCheck(userImportFile) == -1:
+        print("Error: Check Errors")
+    initUsers(userList, departmentList, userImportFile)
+    addAns(userList, exportedDataFile)
+    #university data
+    #addAns(userList, "exported_results_1726865868.csv")
+    userWords(userList)
+    print("User Data Loaded Successfully")
+    
+    return userList, departmentList, positionList
+
+
+
+"""
 #Error Checking
 if fileCheck(userImportFile) == -1:
     print("Error: Check Errors")
 
 initUsers(userList, departmentList, userImportFile)
 
-#addAns(userList, "exported_results_1690216079.csv")
+addAns(userList, exportedDataFile)
 
 #university data
-addAns(userList, "exported_results_1726865868.csv")
+#addAns(userList, "exported_results_1726865868.csv")
 userWords(userList)
 
 print("User Data Loaded Successfully")
+"""
+
+#run(userImportFile, exportedDataFile)

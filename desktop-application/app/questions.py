@@ -16,7 +16,7 @@ class  question:
 
 qList = []
 #open the csv file
-qfile = pd.read_csv("./desktop-application/app/questionList.csv")
+#qfile = pd.read_csv("./desktop-application/app/questionList.csv")
 #print(qfile.to_string())
 
 #checks to see if initial 4 values match and if correct will return file without check values
@@ -54,7 +54,19 @@ def initQuestion(qList, qfile):
     for i in qfile.index:
         qList.append(question(qNList[i], qSList[i], qCList[i], qSCList[i], qDList[i]))
 
+def run(qfile):
+    #Error Checking
+    if fileCheck(qfile) == -1:
+        print("Error: Check Errors")
 
+    initQuestion(qList, qfile)
+    print("Question Data Loaded Successfully")
+    return qList
+
+
+
+
+"""
 #Error Checking
 if fileCheck(qfile) == -1:
     print("Error: Check Errors")
@@ -66,3 +78,4 @@ initQuestion(qList, qfile)
     #print(obj.qNum)
 
 print("Question Data Loaded Successfully")
+"""

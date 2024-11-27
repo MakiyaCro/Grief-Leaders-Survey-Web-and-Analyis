@@ -6,20 +6,7 @@ import numpy as np
 #from pylab import title, figure, xlabel, ylabel, xticks, bar, legend, axis, savefig, show, cla
 
 from PIL import Image, ImageFont, ImageDraw
-import logging
-import subprocess
-
-import questionscore
-import wordassociation
-
-
-#logging.basicConfig(level=logging.DEBUG)
-#Constant Percentage for standard deviation
 CUTOFF = 15
-
-class results:
-    questionassessment = questionscore.assessment
-    wordassessment = wordassociation.wordassessment
 
 #This file will be used to create the images, graphs and tables within the powerpoint
 
@@ -32,9 +19,8 @@ sf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 50)
 xsf = ImageFont.truetype("./desktop-application/app/graphics/impact.ttf", 75)
 pointer = Image.open("./desktop-application/app/graphics/pointer.png")
 wordchart = Image.open("./desktop-application/app/graphics/wordchart.png")
-companyname = "Liberty University"
-
-
+gradient = Image.open("./desktop-application/app/graphics/gradientv3.png")
+tab = Image.open("./desktop-application/app/graphics/tab.png")
 
 qtg = []
 
@@ -318,7 +304,7 @@ def generateQuestionTable(catigory, arr, companyname, typList, typ):
     del style2
 
 #might only need it for position analysis
-def generateQueGraph(category, typ):
+def generateQueGraph(category, typ, quesList):
     # Create the data frame
     names = []
     vals = []
@@ -383,13 +369,13 @@ def generateQueGraph(category, typ):
                 t.qNums = qnumTemp
                 break
 
-    for q in results.questionassessment.quesList:
+    for q in quesList:
         if q.qCat == category.catigory and q.qSubCat not in allpossiblesubcats:
             allpossiblesubcats.append(q.qSubCat)
 
     for t in typsubcats:
         for ques in t.qNums:
-            for q in results.questionassessment.quesList:
+            for q in quesList:
                 if ques == q.qNum and q.qSubCat not in t.subcats:
                     t.subcats.append(q.qSubCat)
                     break
@@ -453,14 +439,13 @@ def generateQueGraph(category, typ):
     plt.savefig(f"./desktop-application/app/graphics/questiongraphs/{typ}_{category.catigory}barchart.png", dpi=200, bbox_inches='tight')
     plt.cla()
     plt.close()
-
     
-def generateQuestionDataHub(categories, companyname, departList, positionList):
+def generateQuestionDataHub(categories, companyname, departList, positionList, quesList):
     for cat in categories:
         generateQuestionTable(cat, cat.departments, companyname, departList, "DEP")
         generateQuestionTable(cat, cat.positions, companyname, positionList, "POS")
-        generateQueGraph(cat, "DEP")
-        generateQueGraph(cat, "POS")
+        generateQueGraph(cat, "DEP", quesList)
+        generateQueGraph(cat, "POS", quesList)
 
 def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
     
@@ -469,6 +454,7 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
         df.name = cls.name
         
         for wrd in cls.words:
+            #cls.ident = 'n'
             tempArr = []
             tempArr.append(wrd.name)
             tempArr.append((int(wrd.percent * 100)))
@@ -490,6 +476,21 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
                     break
 
             df.loc[len(df)] = tempArr
+
+        # First, ensure both dataframes are properly sorted by Attribute and then by yes_col
+        if cls.ident == 'p':
+
+            df = df.sort_values(
+                by=[companyname], 
+                ascending=[True]
+            )
+        else:
+            df = df.sort_values(
+                by=[companyname], 
+                ascending=[False]
+            )
+            
+
         
         if hipo[0].userTotal == 0:
             del df["Hipo"]
@@ -538,8 +539,8 @@ def generateClusterTable(arr, hipo, companyname, overall, typList, typ):
 
         style = df.style.hide(axis="index").set_properties(**properties).set_table_styles([index_names, headers]).apply(style_outliers, axis=1)
 
-
-        dfi.export(style, "./desktop-application/app/graphics/clustertables/" + typ + "_" + df.name + "clustertable.png")
+        df.name = cls.name
+        dfi.export(style, "./desktop-application/app/graphics/clustertables/" + typ + "_" + df.name + "_"+ cls.ident + "clustertable.png")
         del df
     
 def generateWordTable(arr, hipo, companyname, overall, typList, typ):
@@ -847,7 +848,85 @@ def generateWordGraph(arr, companyname, overall, typList, typ, totalP):
     plt.savefig(f"./desktop-application/app/graphics/wordgraphs/{end}_WordBarchart.png", dpi=200, bbox_inches='tight')
     plt.close()  # Close the plot to free up memory
         
-def generateWordGraphicHub(overall, departments, positions, departList, positionList, hipo, tUsers, chart, fnt):
+def generateWordGradient(arr, fnt, gradient, tab):
+    try:
+        
+        # Calculate base dimensions
+        PAGE_WIDTH_PIXELS = int(6.5 * 300)  # 1950 pixels
+        DESIRED_WIDTH = int(PAGE_WIDTH_PIXELS * 0.7)  # 1365 pixels
+        
+        # Using direct values instead of trying to get size
+        GRADIENT_WIDTH = 2560  # Original gradient width
+        GRADIENT_HEIGHT = 270  # Original gradient height
+        
+        # Calculate new heights based on our desired width
+        new_height = int(DESIRED_WIDTH * (GRADIENT_HEIGHT / GRADIENT_WIDTH))
+        text_padding = 80
+        total_height = new_height + text_padding
+        
+        # Create base composite image
+        composite = Image.new('RGBA', (DESIRED_WIDTH, total_height), (0, 0, 0, 0))
+
+        # Resize gradient
+        resized_gradient = gradient.resize((DESIRED_WIDTH, new_height), Image.Resampling.LANCZOS)
+
+        # Calculate tab size and resize
+        new_tab_width = int(DESIRED_WIDTH * 0.01)  # 1% of width
+        resized_tab = tab.resize((new_tab_width, new_height), Image.Resampling.LANCZOS)
+
+        # Count words
+        pos = 0
+        neg = 0
+        for word in arr:
+            if word.ident == "neg":
+                neg += 1
+            elif word.ident == "pos":
+                pos += 1
+
+        total = pos + neg
+        pos_percent = (pos / total) if total > 0 else 0
+
+        # Calculate tab position
+        max_tab_position = DESIRED_WIDTH - new_tab_width
+        tab_position = int(max_tab_position * pos_percent)
+
+        # Create gradient layer and paste
+        gradient_layer = Image.new('RGBA', (DESIRED_WIDTH, total_height), (0, 0, 0, 0))
+        gradient_layer.paste(resized_gradient, (0, text_padding))
+        composite.paste(gradient_layer, (0, 0), gradient_layer)
+
+        # Create and paste tab
+        tab_layer = Image.new('RGBA', (DESIRED_WIDTH, total_height), (0, 0, 0, 0))
+        tab_layer.paste(resized_tab, (tab_position, text_padding))
+        composite.paste(tab_layer, (0, 0), tab_layer)
+
+        # Add text
+        draw = ImageDraw.Draw(composite)
+        pos_text = f"{int(pos_percent * 100)}%"
+        
+        # Calculate text position
+        text_bbox = draw.textbbox((0, 0), pos_text, font=fnt)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        
+        text_x = tab_position + (new_tab_width - text_width) // 2
+        text_y = (text_padding - text_height) // 2
+        
+        # Draw text
+        draw.text((text_x, text_y), pos_text, font=fnt, fill=(0, 0, 0))
+
+        # Save the image
+        composite.save("./desktop-application/app/graphics/gradient/OVERALL_WordGradient.png", "PNG")
+
+
+    except Exception as e:
+        print(f"Error in generateWordGradient: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+# And you would call it like this:
+# generateWordGradient(overall, mf, gradient, tab)
+def generateWordGraphicHub(companyname, overall, departments, positions, departList, positionList, hipo, tUsers, chart, fnt, bfnt, gradient, tab):
     #use bubbles in each quadrent possibly percentage in each bubble, tyarget is max size pos in upper left
     #overall
     generateWordGraphic(overall, "Overall", tUsers, chart, fnt)
@@ -864,11 +943,10 @@ def generateWordGraphicHub(overall, departments, positions, departList, position
 
     generateWordGraph(departments, companyname, overall, departList, "Department", tUsers)
     generateWordGraph(positions, companyname, overall, positionList, "Position", tUsers)
-    #dnames = generateWordGraph(departments, companyname, overall, departList , "Department" )
-    #addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/DEP_WordBarchart.png", departments, overall, tUsers, dnames, "DEP")
-    #pnames =generateWordGraph(positions, companyname, overall, positionList , "Position" )
-    #addWordstoWordGraph("./desktop-application/app/graphics/wordgraphs/POS_WordBarchart.png", positions, overall, tUsers, pnames, "POS")
 
+    #generate gradient
+    generateWordGradient(overall, bfnt, gradient, tab)
+    
 def generateWordDataHub(deparments, positions, hipo, companyname, overall, clusters, departList, posList):
     
     generateWordTable(deparments, hipo, companyname, overall, departList, "Department")
@@ -877,17 +955,19 @@ def generateWordDataHub(deparments, positions, hipo, companyname, overall, clust
     generateClusterTable(deparments, hipo, companyname, clusters, departList, "DEP")
     generateClusterTable(positions, hipo, companyname, clusters, posList, "POS")
 
-print("Generating Participation Graphs")
-generateParticipationGraph(results.questionassessment.depnoscore, results.questionassessment.hiponoscore[0], results.questionassessment.overallnoscore[0], "Department")
-generateParticipationGraph(results.questionassessment.posnoscore, results.questionassessment.hiponoscore[0], results.questionassessment.overallnoscore[0], "Position")
-print("Participation Graph Complete")
+def run(questionassessment, wordassessment, departList, positionList, quesList, companyname):
+    print("Generating Participation Graphs")
+    generateParticipationGraph(questionassessment.depnoscore, questionassessment.hiponoscore[0], questionassessment.overallnoscore[0], "Department")
+    generateParticipationGraph(questionassessment.posnoscore, questionassessment.hiponoscore[0], questionassessment.overallnoscore[0], "Position")
+    print("Participation Graph Complete")
 
-print("Generating Question Graphics")
-generateQuestionDataHub(results.questionassessment.categories, companyname, results.questionassessment.departList, results.questionassessment.positionList)
-generateAllDials(results.questionassessment.categories, dial, pointer, xsf, companyname, results.questionassessment.pScore)
-print ("Question Graphics Complete")
+    print("Generating Question Graphics")
+    generateQuestionDataHub(questionassessment.categories, companyname, departList, positionList, quesList)
+    generateAllDials(questionassessment.categories, dial, pointer, xsf, companyname, questionassessment.pScore)
+    print ("Question Graphics Complete")
 
-print("Generating Word Assosiation Graphics")
-generateWordDataHub(results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.hipoScores, companyname, results.wordassessment.words, results.wordassessment.clusters, results.wordassessment.departList, results.wordassessment.positionList)
-generateWordGraphicHub(results.wordassessment.words, results.wordassessment.departmentScores, results.wordassessment.positionScores, results.wordassessment.departList, results.questionassessment.positionList, results.wordassessment.hipoScores[0], results.wordassessment.userTotal, wordchart, sf)
-print("Word Assosiation Graphics Complete")
+    print("Generating Word Assosiation Graphics")
+    generateWordDataHub(wordassessment.departmentScores, wordassessment.positionScores, wordassessment.hipoScores, companyname, wordassessment.words, wordassessment.clusters, departList, positionList)
+    generateWordGraphicHub(companyname, wordassessment.words, wordassessment.departmentScores, wordassessment.positionScores, departList, positionList, wordassessment.hipoScores[0], wordassessment.userTotal, wordchart, sf, mf, gradient, tab)
+    print("Word Assosiation Graphics Complete")
+    return qtg

@@ -1,27 +1,21 @@
-import questions
-import users
-
 #pull in information from source files
-class assessment:
-    #static
-    cat = ["RFP", "EPS", "CM", "LdrSpv", "SrLdr"]
-    subCat = []
-    userList = users.userList
-    departList = users.departmentList
-    positionList = users.positionList
-    quesList = questions.qList
+class assessmentCls:
+    def __init__(self):
+        #static
+        self.cat = ["RFP", "EPS", "CM", "LdrSpv", "SrLdr"]
+        self.subCat = []
 
-    #will be edited
-    categories = []
-    qscores = []
-    depnoscore = []
-    posnoscore = []
-    hiponoscore = []
-    overallnoscore = []
+        #will be edited
+        self.categories = []
+        self.qscores = []
+        self.depnoscore = []
+        self.posnoscore = []
+        self.hiponoscore = []
+        self.overallnoscore = []
 
-    #overall score
-    tpScore = 0
-    pScore = 0
+        #overall score
+        self.tpScore = 0
+        self.pScore = 0
 
 class noscore:
     def __init__(self, name):
@@ -290,6 +284,25 @@ def generateWeightedScore(categories, tpScore):
 
     return (totalweighted / tpScore) * 100
 
+def run(userList, departList, positionList, quesList):
+    assessment = assessmentCls()
+
+    #init shells for data
+    initCategories(assessment.cat, departList, positionList, assessment.categories)
+    assignQuestions(assessment.categories, quesList)
+
+    noScore(userList, departList, positionList, assessment.depnoscore, assessment.posnoscore, assessment.hiponoscore, assessment.overallnoscore)
+    parseAnswers(assessment.categories, userList, quesList)
+
+    assessment.tpScore = determinetotalPossibleScore(quesList)
+    assessment.pScore = generateWeightedScore(assessment.categories, assessment.tpScore)
+    if assessment.pScore < 0:
+        assessment.pScore = 0
+    print("Completed Question Scoring")
+    return assessment
+
+
+"""
 #init shells for data
 initCategories(assessment.cat, assessment.departList, assessment.positionList, assessment.categories)
 assignQuestions(assessment.categories, assessment.quesList)
@@ -304,3 +317,4 @@ assessment.pScore = generateWeightedScore(assessment.categories, assessment.tpSc
 if assessment.pScore < 0:
                     assessment.pScore = 0
 print("Completed Question Scoring")
+"""

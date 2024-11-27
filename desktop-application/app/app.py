@@ -1,27 +1,45 @@
+import pandas as pd
 
-print("Welcome to the griefleaders analysis application")
-#load user info and quesion info
+import users
+import questions
+import questionscore
+import wordassociation
+import graphics
+import powerpoint
 
-#import questions
-#import users
+#runtime application
 
+#optional run report
 
-def menu():
-    print("The current application will be running the following files")
-    print("For user data: import-gl-1.csv")
-    print("For user answers: exported_results_1690216079.csv")
-    print("For question data: questionList.csv")
-    print("")
-    print("Please input one of the follwing commands score or exit")
+#files
+userImportFiles = pd.read_csv("./desktop-application/app/import-gl-1.csv")
+exportedDataFile = pd.read_csv("./desktop-application/app/results/exported_results_1690216079.csv")
+qfile = pd.read_csv("./desktop-application/app/questionList.csv")
 
+wordImportFile = pd.read_csv("./desktop-application/app/words.csv")
+clusterImportFile = pd.read_csv("./desktop-application/app/clusters.csv")
 
-cmnd = 0
-while cmnd != -1:
-    menu()
-    raw = input()
-    if raw == "score":
-        print("todo")
+#client name
+companyName = "Liberty University"
 
-    if raw == "exit":
-        cmnd = -1
-        print("exiting application")
+#user initialization
+userInfo = users.run(userImportFiles, exportedDataFile)
+del userImportFiles
+del exportedDataFile
+
+#question initilization
+questionInfo = questions.run(qfile)
+
+#question scoring
+questionAssessmentInfo = questionscore.run(userInfo[0], userInfo[1], userInfo[2], questionInfo)
+
+#word association scoring
+wordAssessmentInfo = wordassociation.run(wordImportFile, clusterImportFile, userInfo[0], userInfo[1], userInfo[2])
+del wordImportFile
+del clusterImportFile
+
+#graphic generation
+questionTable = graphics.run(questionAssessmentInfo, wordAssessmentInfo, userInfo[1], userInfo[2], questionInfo, companyName)
+
+#powerpoint generation
+powerpoint.run(questionTable, companyName, qfile)
