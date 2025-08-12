@@ -27,8 +27,8 @@ userList = []
 departmentList = []
 positionList = []
 
-userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
-exportedDataFile = pd.read_csv("./desktop-application/app/results/exported_results_1690216079.csv")
+#userImportFile = pd.read_csv("./desktop-application/app/import-gl-1.csv")
+#exportedDataFile = pd.read_csv("./desktop-application/app/results/exported_results_1690216079.csv")
 
 #university data
 #userImportFile = pd.read_csv("./desktop-application/app/import-libertyedu-1.csv")

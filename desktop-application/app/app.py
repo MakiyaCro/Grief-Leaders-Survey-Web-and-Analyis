@@ -12,12 +12,11 @@ import powerpoint
 #optional run report
 
 #files
-userImportFiles = pd.read_csv("./desktop-application/app/import-gl-1.csv")
-exportedDataFile = pd.read_csv("./desktop-application/app/results/exported_results_1690216079.csv")
-qfile = pd.read_csv("./desktop-application/app/questionList.csv")
-
-wordImportFile = pd.read_csv("./desktop-application/app/words.csv")
-clusterImportFile = pd.read_csv("./desktop-application/app/clusters.csv")
+userImportFiles = pd.read_csv("./desktop-application/app/files/userimports/import-gl-1.csv")
+exportedDataFile = pd.read_csv("./desktop-application/app/files/results/exported_results_1690216079.csv")
+qfile = pd.read_csv("./desktop-application/app/files/questions/questionList.csv")
+wordImportFile = pd.read_csv("./desktop-application/app/files/words/words.csv")
+clusterImportFile = pd.read_csv("./desktop-application/app/files/clusters/clusters.csv")
 
 #client name
 companyName = "Liberty University"

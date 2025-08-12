@@ -130,3 +130,10 @@ dmypy.json
 *.png
 desktop-application/app/powerpoint/test.pptx
 desktop-application/app/powerpoint/originalData.pptx
+desktop-application/app/files/clusters/clusters.csv
+desktop-application/app/files/questions/questionList.csv
+desktop-application/app/files/results/exported_results_1690216079.csv
+desktop-application/app/files/results/exported_results_1726865868.csv
+desktop-application/app/files/userimports/import-gl-1.csv
+desktop-application/app/files/userimports/import-libertyedu-1.csv
+desktop-application/app/files/words/words.csv
